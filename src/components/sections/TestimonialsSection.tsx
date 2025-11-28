@@ -2,28 +2,28 @@ import React, { useEffect, useState } from 'react';
 import SectionTitle from '../ui/SectionTitle';
 const testimonials = [{
   id: 1,
-  quote: 'The teachers at BrightFuture have been incredible mentors for my son. His confidence and love for learning have grown tremendously since joining the school.',
-  name: 'Sarah Johnson',
+  quote: 'The teachers at Vendramini have been incredible mentors for my son. His confidence and love for learning have grown tremendously since joining the school.',
+  name: '',
   role: 'Parent of Primary Student',
-  image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&h=200&q=80'
+  image: ''
 }, {
   id: 2,
   quote: "As a teacher, I'm proud to be part of a school that truly values both academic excellence and the emotional well-being of each child.",
-  name: 'Michael Chen',
+  name: '',
   role: 'Mathematics Teacher',
-  image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&h=200&q=80'
-}, {
+  image: ''
+},{
   id: 3,
   quote: "The pre-primary campus provided such a warm, nurturing start to my daughter's education. The transition to the primary school was seamless.",
-  name: 'Emily Rodriguez',
+  name: '',
   role: 'Parent of Two Students',
-  image: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&h=200&q=80'
+  image: ''
 }, {
   id: 4,
   quote: "I love my school! The teachers make learning fun and I've made so many friends. The science lab is my favorite place!",
-  name: 'Alex Thompson',
-  role: 'Year 5 Student',
-  image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&h=200&q=80'
+  name: '',
+  role: 'Grade 5 Student',
+  image: ''
 }];
 const TestimonialsSection = () => {
   const [activeIndex, setActiveIndex] = useState(0);

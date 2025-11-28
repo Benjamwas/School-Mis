@@ -9,7 +9,7 @@ const AboutUs = () => {
       {/* Hero Section */}
       <section className="relative py-20 bg-gray-100">
         <div className="absolute inset-0 bg-cover bg-center opacity-20" style={{
-        backgroundImage: "url('https://images.unsplash.com/photo-1503676260728-1c00da094a0b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80')"
+        backgroundImage: "url('/images/20250104_104747.jpg')"
       }}></div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-3xl mx-auto text-center">
@@ -128,7 +128,7 @@ const AboutUs = () => {
               <SectionTitle title="Our History" subtitle="A legacy of educational excellence spanning over two decades." />
               <div className="space-y-4 text-gray-600">
                 <p>
-                  BrightFuture Schools was founded in 2000 with our first
+                  Vendramini Schools was founded in 2000 with our first
                   pre-primary campus, established by a group of dedicated
                   educators who believed in creating a more nurturing and
                   innovative approach to early childhood education.
@@ -155,7 +155,10 @@ const AboutUs = () => {
             </div>
             <div className="lg:w-1/2">
               <div className="relative">
-                <img src="https://images.unsplash.com/photo-1509062522246-3755977927d7?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="School history" className="rounded-lg shadow-lg w-full" />
+                <img src="/images/20250104_110857.jpg" 
+                alt="School history" 
+                className="rounded-lg shadow-lg w-full" 
+                />
                 <div className="absolute -bottom-6 -left-6 w-48 h-48 bg-red-100 rounded-lg -z-10"></div>
                 <div className="absolute -top-6 -right-6 w-48 h-48 bg-light-blue-100 rounded-lg -z-10"></div>
               </div>
@@ -166,49 +169,62 @@ const AboutUs = () => {
       {/* Leadership Team */}
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
-          <SectionTitle title="Our Leadership Team" subtitle="Meet the dedicated educators who guide our schools." center />
+          <SectionTitle title="Our Leadership Team" 
+          subtitle="Meet the dedicated educators who guide our schools." center />
+          
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-12">
             <div className="bg-white rounded-lg overflow-hidden shadow-md transform transition-transform hover:scale-105">
-              <img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" alt="Principal" className="w-full h-64 object-cover object-center" />
+              <img src="" 
+              alt="Administrator" 
+              className="w-full h-64 object-cover object-center"
+               />
               <div className="p-6">
                 <h3 className="text-xl font-bold text-gray-800 mb-1">
-                  Dr. Jennifer Smith
+                  Sr. Agnes
                 </h3>
                 <p className="text-red-600 font-medium mb-4">
                   Executive Principal
                 </p>
                 <p className="text-gray-600">
-                  With over 20 years in education, Dr. Smith leads our network
+                  With over 20 years in education, Sr. Agnes leads our network
                   of schools with passion and vision.
                 </p>
               </div>
             </div>
             <div className="bg-white rounded-lg overflow-hidden shadow-md transform transition-transform hover:scale-105">
-              <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" alt="Vice Principal" className="w-full h-64 object-cover object-center" />
+              <img src="/images/20250116_161339.jpg" 
+              alt="Vice Principal" 
+              className="w-full h-64 object-cover object-center" 
+              />
+
               <div className="p-6">
                 <h3 className="text-xl font-bold text-gray-800 mb-1">
-                  Michael Johnson
+                  Fred Wasike
                 </h3>
                 <p className="text-red-600 font-medium mb-4">
                   Head of Primary School
                 </p>
                 <p className="text-gray-600">
-                  Mr. Johnson brings innovation and excellence to our primary
+                  Mr. Fred brings innovation and excellence to our primary
                   school curriculum and operations.
                 </p>
               </div>
             </div>
             <div className="bg-white rounded-lg overflow-hidden shadow-md transform transition-transform hover:scale-105">
-              <img src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" alt="Early Education Director" className="w-full h-64 object-cover object-center" />
+              <img src="" 
+              alt="Early Education Director" 
+              className="w-full h-64 object-cover object-center"
+               />
+
               <div className="p-6">
                 <h3 className="text-xl font-bold text-gray-800 mb-1">
-                  Sarah Chen
+                  
                 </h3>
                 <p className="text-red-600 font-medium mb-4">
                   Early Education Director
                 </p>
                 <p className="text-gray-600">
-                  Ms. Chen oversees our pre-primary campuses, ensuring quality
+                  The teachers oversee our pre-primary campuses, ensuring quality
                   early childhood education.
                 </p>
               </div>

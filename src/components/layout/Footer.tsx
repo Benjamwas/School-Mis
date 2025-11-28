@@ -8,7 +8,7 @@ const Footer = () => {
           {/* School Info */}
           <div>
             <h3 className="text-xl font-bold mb-4">
-              <span className="text-red-500">Bright</span>Future
+              <span className="text-red-500"> Vendramini </span>Schools
             </h3>
             <p className="mb-4 text-gray-300">
               Providing quality education to children ages 3-13 across our four
@@ -16,7 +16,7 @@ const Footer = () => {
               environment.
             </p>
             <div className="flex space-x-4">
-              <a href="#" className="text-gray-300 hover:text-white transition">
+              <a href="https://www.facebook.com/profile.php?id=61583810420720" className="text-gray-300 hover:text-white transition">
                 <FacebookIcon className="h-5 w-5" />
               </a>
               <a href="#" className="text-gray-300 hover:text-white transition">
@@ -72,22 +72,22 @@ const Footer = () => {
             <ul className="space-y-2">
               <li>
                 <Link to="/campuses#pre-primary-1" className="text-gray-300 hover:text-white transition">
-                  Pre-Primary Campus 1
+                  Vendramini Pambazuko
                 </Link>
               </li>
               <li>
                 <Link to="/campuses#pre-primary-2" className="text-gray-300 hover:text-white transition">
-                  Pre-Primary Campus 2
+                  Vendramini Marengeta
                 </Link>
               </li>
               <li>
                 <Link to="/campuses#pre-primary-3" className="text-gray-300 hover:text-white transition">
-                  Pre-Primary Campus 3
+                  Vendramini Kongo
                 </Link>
               </li>
               <li>
                 <Link to="/campuses#primary" className="text-gray-300 hover:text-white transition">
-                  Primary School
+                  Vendramini Pre-Primary Catholic School
                 </Link>
               </li>
             </ul>
@@ -99,7 +99,7 @@ const Footer = () => {
               <li className="flex items-start">
                 <MapPinIcon className="h-5 w-5 mr-2 mt-0.5 text-red-500" />
                 <span className="text-gray-300">
-                  123 Education St, School District, City
+                  Kahawa West, Nairobi, Kenya
                 </span>
               </li>
               <li className="flex items-center">
@@ -108,14 +108,14 @@ const Footer = () => {
               </li>
               <li className="flex items-center">
                 <MailIcon className="h-5 w-5 mr-2 text-red-500" />
-                <span className="text-gray-300">info@brightfuture.edu</span>
+                <span className="text-gray-300">vendraminischools@gmail.com</span>
               </li>
             </ul>
           </div>
         </div>
         <div className="border-t border-gray-700 mt-10 pt-6 text-center text-gray-400">
           <p>
-            &copy; {new Date().getFullYear()} BrightFuture Schools. All rights
+            &copy; {new Date().getFullYear()} Vendramini Schools. All rights
             reserved.
           </p>
         </div>

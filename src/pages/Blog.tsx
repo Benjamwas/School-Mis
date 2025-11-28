@@ -7,7 +7,7 @@ const blogPosts = [{
   excerpt: 'Research shows that play-based learning helps develop crucial cognitive and social skills in young children.',
   content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nisl vel ultricies lacinia, nisl nisl aliquam nisl, eu aliquam nisl nisl eu nisl. Sed euismod, nisl vel ultricies lacinia, nisl nisl aliquam nisl, eu aliquam nisl nisl eu nisl.',
   category: 'Early Education',
-  author: 'Dr. Jennifer Smith',
+  author: 'Vendramini',
   date: 'May 15, 2023',
   image: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
   tags: ['early education', 'play-based learning', 'child development']
@@ -17,9 +17,9 @@ const blogPosts = [{
   excerpt: 'Practical tips for parents to help their children make a smooth transition from pre-primary to primary education.',
   content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nisl vel ultricies lacinia, nisl nisl aliquam nisl, eu aliquam nisl nisl eu nisl. Sed euismod, nisl vel ultricies lacinia, nisl nisl aliquam nisl, eu aliquam nisl nisl eu nisl.',
   category: 'Parenting',
-  author: 'Sarah Chen',
+  author: 'Vendramini',
   date: 'June 2, 2023',
-  image: 'https://images.unsplash.com/photo-1576267423445-b2e0074d68a4?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+  image: '/images/20250129_132339.jpg',
   tags: ['school transition', 'primary school', 'parenting tips']
 }, {
   id: 3,
@@ -27,9 +27,9 @@ const blogPosts = [{
   excerpt: 'How our arts-focused curriculum helps children develop creative thinking and problem-solving skills.',
   content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nisl vel ultricies lacinia, nisl nisl aliquam nisl, eu aliquam nisl nisl eu nisl. Sed euismod, nisl vel ultricies lacinia, nisl nisl aliquam nisl, eu aliquam nisl nisl eu nisl.',
   category: 'Arts Education',
-  author: 'Michael Johnson',
+  author: 'Vendramini',
   date: 'June 18, 2023',
-  image: 'https://images.unsplash.com/photo-1588075592446-265fd1e6e76f?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+  image: '/images/20250104_104919.jpg',
   tags: ['arts education', 'creativity', 'child development']
 }, {
   id: 4,
@@ -37,7 +37,7 @@ const blogPosts = [{
   excerpt: 'Understanding how proper nutrition supports cognitive development and learning in school-aged children.',
   content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nisl vel ultricies lacinia, nisl nisl aliquam nisl, eu aliquam nisl nisl eu nisl. Sed euismod, nisl vel ultricies lacinia, nisl nisl aliquam nisl, eu aliquam nisl nisl eu nisl.',
   category: 'Health & Wellness',
-  author: 'Dr. Emily Rodriguez',
+  author: 'Vendramini',
   date: 'July 5, 2023',
   image: 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
   tags: ['nutrition', 'academic performance', 'child health']
@@ -47,9 +47,9 @@ const blogPosts = [{
   excerpt: 'How we integrate technology in age-appropriate ways to enhance learning without compromising development.',
   content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nisl vel ultricies lacinia, nisl nisl aliquam nisl, eu aliquam nisl nisl eu nisl. Sed euismod, nisl vel ultricies lacinia, nisl nisl aliquam nisl, eu aliquam nisl nisl eu nisl.',
   category: 'Educational Technology',
-  author: 'James Wilson',
+  author: 'Vendramini',
   date: 'July 22, 2023',
-  image: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+  image: '/images/20250116_153019.jpg',
   tags: ['educational technology', 'digital learning', 'screen time']
 }, {
   id: 6,
@@ -57,9 +57,9 @@ const blogPosts = [{
   excerpt: 'Strategies for helping children develop resilience and cope with challenges in school and life.',
   content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nisl vel ultricies lacinia, nisl nisl aliquam nisl, eu aliquam nisl nisl eu nisl. Sed euismod, nisl vel ultricies lacinia, nisl nisl aliquam nisl, eu aliquam nisl nisl eu nisl.',
   category: 'Child Psychology',
-  author: 'Dr. Jennifer Smith',
+  author: 'Vendramini',
   date: 'August 10, 2023',
-  image: 'https://images.unsplash.com/photo-1544717305-2782549b5136?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+  image: '/images/20250116_162626.jpg',
   tags: ['resilience', 'mental health', 'child development']
 }];
 const categories = ['All Categories', 'Early Education', 'Parenting', 'Arts Education', 'Health & Wellness', 'Educational Technology', 'Child Psychology'];

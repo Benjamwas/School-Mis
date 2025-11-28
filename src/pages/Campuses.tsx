@@ -4,59 +4,59 @@ import Button from '../components/ui/Button';
 import { MapPinIcon, UsersIcon, ClockIcon, PhoneIcon } from 'lucide-react';
 const campuses = [{
   id: 'pre-primary-1',
-  name: 'Pre-Primary Campus 1',
+  name: 'Vendramini Pambazuko',
   tagline: 'Nurturing Young Minds',
-  description: 'Our North District campus provides a warm, supportive environment for our youngest learners, focusing on play-based learning and social development.',
-  longDescription: 'At our North District Pre-Primary Campus, we create a nurturing environment where children aged 3-5 can explore, discover, and grow. Our play-based curriculum encourages curiosity and creativity while building a strong foundation for future learning. With spacious classrooms, a dedicated outdoor play area, and specialized learning zones, children develop social skills, early literacy, and numeracy in a supportive setting.',
-  image: 'https://images.unsplash.com/photo-1567448400815-59d52a2935d8?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80',
+  description: 'Our Pambazuko campus provides a warm, supportive environment for our youngest learners, focusing on play-based learning and social development.',
+  longDescription: 'At our Pambazuko Pre-Primary Campus, we create a nurturing environment where children aged 3-5 can explore, discover, and grow. Our play-based curriculum encourages curiosity and creativity while building a strong foundation for future learning. With spacious classrooms, a dedicated outdoor play area, and specialized learning zones, children develop social skills, early literacy, and numeracy in a supportive setting.',
+  image: '/images/20250104_100703.jpg',
   features: ['Specialized early learning curriculum', 'Low student-teacher ratio (8:1)', 'Dedicated outdoor play spaces', 'Modern, child-friendly facilities', 'Nutritious meal program'],
   details: {
-    address: '123 North Avenue, North District',
+    address: 'Kahawa West, Nairobi, Kenya',
     hours: '8:00 AM - 3:30 PM (Extended care available until 5:30 PM)',
     ageRange: 'Ages 3-5',
-    contact: '(123) 456-7890'
+    contact: '0114468263 / 0722217531'
   }
 }, {
   id: 'pre-primary-2',
-  name: 'Pre-Primary Campus 2',
+  name: 'Vendramini Marengeta',
   tagline: 'Building Strong Foundations',
-  description: 'Located in the East District, this campus specializes in early literacy and numeracy skills in a supportive environment for children aged 3-5.',
-  longDescription: 'Our East District Pre-Primary Campus is designed to build strong foundations in early literacy and numeracy. Through a structured yet flexible approach, children develop essential skills that prepare them for primary education. Our experienced educators use innovative teaching methods, incorporating music, movement, and hands-on activities to make learning engaging and effective for young minds.',
-  image: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80',
+  description: 'Located in Kamae Area, this campus specializes in early literacy and numeracy skills in a supportive environment for children aged 3-5.',
+  longDescription: 'Our Marengeta Pre-Primary Campus is designed to build strong foundations in early literacy and numeracy. Through a structured yet flexible approach, children develop essential skills that prepare them for primary education. Our experienced educators use innovative teaching methods, incorporating music, movement, and hands-on activities to make learning engaging and effective for young minds.',
+  image: '/images/20250104_132614.jpg',
   features: ['Focus on early literacy and numeracy', 'Language-rich environment', 'Interactive learning stations', 'Regular progress assessments', 'Parent involvement programs'],
   details: {
-    address: '456 East Boulevard, East District',
+    address: 'Kahawa West, Nairobi, Kenya',
     hours: '8:00 AM - 3:30 PM (Extended care available until 5:30 PM)',
     ageRange: 'Ages 3-5',
-    contact: '(123) 456-7891'
+    contact: '0114468263 / 0722217531'
   }
 }, {
   id: 'pre-primary-3',
-  name: 'Pre-Primary Campus 3',
+  name: 'Vendramini Kongo',
   tagline: 'Inspiring Creativity',
-  description: 'Our arts-focused West District campus encourages creativity and expression for pre-primary students ages 3-5.',
-  longDescription: 'The West District Pre-Primary Campus is our arts-focused early learning center, where creativity and expression are central to the educational experience. Children engage in a variety of artistic pursuits including visual arts, music, movement, and dramatic play, all integrated with core early learning concepts. This approach nurtures creative thinking, emotional expression, and cognitive development in a joyful, inspiring environment.',
-  image: 'https://images.unsplash.com/photo-1588075592446-265fd1e6e76f?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80',
+  description: 'Our Vendramini Kongo campus encourages creativity and expression for pre-primary students ages 3-5.',
+  longDescription: 'The Kongo Pre-Primary Campus is our arts-focused early learning center, where creativity and expression are central to the educational experience. Children engage in a variety of artistic pursuits including visual arts, music, movement, and dramatic play, all integrated with core early learning concepts. This approach nurtures creative thinking, emotional expression, and cognitive development in a joyful, inspiring environment.',
+  image: '/images/20250129_125239.jpg',
   features: ['Arts-integrated curriculum', 'Dedicated art studio spaces', 'Weekly music and movement classes', 'Regular art exhibitions', 'Collaborative creative projects'],
   details: {
-    address: '789 West Street, West District',
+    address: 'Kahawa West, Nairobi, Kenya',
     hours: '8:00 AM - 3:30 PM (Extended care available until 5:30 PM)',
     ageRange: 'Ages 3-5',
-    contact: '(123) 456-7892'
+    contact: '0114468263 / 0722217531'
   }
 }, {
   id: 'primary',
-  name: 'Primary School',
+  name: 'Vendramini Pre-Primary & Primary Catholic Schools',
   tagline: 'Excellence in Education',
-  description: 'Our Central District Primary School provides comprehensive education for students aged 6-13, with a focus on academic excellence and character development.',
-  longDescription: 'The BrightFuture Primary School in Central District offers a comprehensive education for students aged 6-13. Our curriculum balances academic rigor with character development, preparing students for future success. With specialized teachers for core subjects, modern facilities including science and computer labs, and a wide range of extracurricular activities, we provide a well-rounded education that challenges and inspires each student to reach their full potential.',
-  image: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80',
+  description: 'Our main School provides comprehensive education for students aged 6-13, with a focus on academic excellence and character development.',
+  longDescription: 'The Vendramini pre-primary Catholic School in Jua kali offers a comprehensive education for students aged 6-13. Our curriculum balances academic rigor with character development, preparing students for future success. With specialized teachers for core subjects, modern facilities including science and computer labs, and a wide range of extracurricular activities, we provide a well-rounded education that challenges and inspires each student to reach their full potential.',
+  image: '/images/20250104_110727.jpg',
   features: ['Comprehensive curriculum aligned with national standards', 'Specialized subject teachers', 'Modern science and computer labs', 'Sports program with dedicated facilities', 'Character education and leadership development'],
   details: {
-    address: '101 Central Road, Central District',
+    address: 'Kahawa West, Nairobi, Kenya',
     hours: '8:00 AM - 3:45 PM (Extended care available until 5:30 PM)',
     ageRange: 'Ages 6-13',
-    contact: '(123) 456-7893'
+    contact: '0114468263 / 0722217531'
   }
 }];
 const Campuses = () => {

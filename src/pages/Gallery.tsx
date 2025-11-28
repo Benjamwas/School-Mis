@@ -3,66 +3,36 @@ import SectionTitle from '../components/ui/SectionTitle';
 import { XIcon } from 'lucide-react';
 const galleryImages = [{
   id: 1,
-  src: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+  src: '/images/20250116_162154.jpg',
   alt: 'Students in classroom',
   category: 'Classroom'
 }, {
   id: 2,
-  src: 'https://images.unsplash.com/photo-1577896851231-70ef18881754?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+  src: '/images/20250116_162626.jpg',
   alt: 'School library',
   category: 'Facilities'
 }, {
   id: 3,
-  src: 'https://images.unsplash.com/photo-1588075592446-265fd1e6e76f?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-  alt: 'Art class',
-  category: 'Arts'
+  src: '/images/20250116_170704.jpg',
+  alt: 'Science lab',
+  category: 'Science'
 }, {
   id: 4,
-  src: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+  src: '/images/20250129_115716.jpg',
   alt: 'Sports activities',
   category: 'Sports'
 }, {
   id: 5,
-  src: 'https://images.unsplash.com/photo-1567448400815-59d52a2935d8?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-  alt: 'Pre-primary students playing',
+  src: '/images/20250129_132339.jpg',
+  alt: 'Pre-primary students in classroom',
   category: 'Pre-Primary'
 }, {
   id: 6,
-  src: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+  src: '/images/charity.jpg',
   alt: 'School history',
   category: 'Events'
-}, {
-  id: 7,
-  src: 'https://images.unsplash.com/photo-1576267423445-b2e0074d68a4?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-  alt: 'Sports day',
-  category: 'Sports'
-}, {
-  id: 8,
-  src: 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-  alt: 'Healthy lunch',
-  category: 'Facilities'
-}, {
-  id: 9,
-  src: 'https://images.unsplash.com/photo-1494059980473-813e73ee784b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-  alt: 'Art festival',
-  category: 'Arts'
-}, {
-  id: 10,
-  src: 'https://images.unsplash.com/photo-1544717305-2782549b5136?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-  alt: 'Primary students in group activity',
-  category: 'Classroom'
-}, {
-  id: 11,
-  src: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-  alt: 'Science class',
-  category: 'Classroom'
-}, {
-  id: 12,
-  src: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-  alt: 'School library books',
-  category: 'Facilities'
-}];
-const categories = ['All', 'Classroom', 'Facilities', 'Arts', 'Sports', 'Events', 'Pre-Primary'];
+},];
+const categories = ['All', 'Classroom', 'Facilities', 'Arts','Science', 'Sports', 'Events', 'Pre-Primary'];
 const Gallery = () => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('All');

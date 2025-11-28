@@ -4,27 +4,27 @@ import SectionTitle from '../ui/SectionTitle';
 import Button from '../ui/Button';
 const events = [{
   id: 1,
-  title: 'Annual Sports Day',
-  date: 'June 15, 2023',
+  title: 'Charity Day',
+  date: 'Sep 15, 2025',
   time: '9:00 AM - 3:00 PM',
-  location: 'Primary School Campus',
-  description: 'Join us for a day of sports, games, and friendly competition across all age groups.',
-  image: 'https://images.unsplash.com/photo-1576267423445-b2e0074d68a4?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80'
+  location: 'Kamiti',
+  description: 'Join us for a charity day, as we share the day and get experiences from Kamiti Prisons',
+  image: '/images/charity.jpg'
 }, {
   id: 2,
-  title: 'Parent-Teacher Conference',
-  date: 'June 20-21, 2023',
-  time: 'By Appointment',
+  title: 'School Re-opening',
+  date: 'January, 2026',
+  time: '6:30 am',
   location: 'All Campuses',
-  description: "Schedule a meeting with your child's teachers to discuss progress and development.",
-  image: 'https://images.unsplash.com/photo-1577896851231-70ef18881754?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80'
+  description: "Commencement of first term",
+  image: '/images/20250116_153615.jpg'
 }, {
   id: 3,
-  title: 'Summer Arts Festival',
-  date: 'July 5, 2023',
-  time: '1:00 PM - 5:00 PM',
-  location: 'Pre-Primary Campus 3',
-  description: 'A celebration of student artwork, performances, and creative projects from the school year.',
+  title: 'TBD',
+  date: 'TBD',
+  time: 'TBD',
+  location: 'TBD',
+  description: 'TBD',
   image: 'https://images.unsplash.com/photo-1494059980473-813e73ee784b?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80'
 }];
 const EventsSection = () => {

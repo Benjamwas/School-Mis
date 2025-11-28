@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import Button from '../ui/Button';
-const heroImages = ['https://images.unsplash.com/photo-1503676260728-1c00da094a0b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80', 'https://images.unsplash.com/photo-1577896851231-70ef18881754?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80', 'https://images.unsplash.com/photo-1588072432836-e10032774350?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80'];
+const heroImages = ['/images/20250104_110727.jpg', '/images/20250104_110857.jpg', '/images/20250104_104747.jpg'];
 const HeroSection = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [animatedText, setAnimatedText] = useState('');
-  const fullText = 'Where young minds grow and flourish';
+  const fullText = 'High is our Origin and Destiny';
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentImageIndex(prevIndex => (prevIndex + 1) % heroImages.length);
@@ -35,8 +35,8 @@ const HeroSection = () => {
         <div className="text-center text-white max-w-4xl mx-auto">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4">
             <span className="block">
-              Welcome to <span className="text-red-500">Bright</span>Future
-              Schools
+              Welcome to <span className="text-red-500">Vendramini </span>
+               Schools
             </span>
           </h1>
           <p className="text-xl md:text-2xl mb-8 h-8">{animatedText}</p>

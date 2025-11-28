@@ -25,9 +25,9 @@ const Navbar = () => {
       <div className="container mx-auto px-4 md:px-6">
         <div className="flex justify-between items-center">
           <Link to="/" className="flex items-center">
-            <span className="text-2xl font-bold text-gray-800">
-              <span className="text-red-600">Bright</span>Future
-            </span>
+            <img src="/images/IMG-20250131-WA0025.jpg" 
+            alt="Vendramini Schools Logo" 
+            className="h-14 w-auto" />
           </Link>
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">

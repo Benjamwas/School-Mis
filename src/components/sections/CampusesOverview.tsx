@@ -3,30 +3,30 @@ import { Link } from 'react-router-dom';
 import SectionTitle from '../ui/SectionTitle';
 const campusData = [{
   id: 'pre-primary-1',
-  name: 'Pre-Primary Campus 1',
-  location: 'North District',
-  image: 'https://images.unsplash.com/photo-1567448400815-59d52a2935d8?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
+  name: 'Vendramini Pambazuko',
+  location: 'Kahawa West',
+  image: '/images/20250104_100703.jpg',
   description: 'A nurturing environment for our youngest learners aged 3-5, focusing on play-based learning and social development.',
   color: 'bg-red-100'
 }, {
   id: 'pre-primary-2',
-  name: 'Pre-Primary Campus 2',
-  location: 'East District',
-  image: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
+  name: 'Vendramini Marengeta',
+  location: 'Kamae',
+  image: 'images/20250104_132614.jpg',
   description: 'Specializing in early literacy and numeracy skills in a supportive environment for children aged 3-5.',
   color: 'bg-light-blue-100'
 }, {
   id: 'pre-primary-3',
-  name: 'Pre-Primary Campus 3',
-  location: 'West District',
-  image: 'https://images.unsplash.com/photo-1588075592446-265fd1e6e76f?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
+  name: 'Vendramini Kongo',
+  location: 'Kongo',
+  image: '/images/20250129_125239.jpg',
   description: 'Our arts-focused pre-primary campus, encouraging creativity and expression for ages 3-5.',
   color: 'bg-gray-100'
 }, {
   id: 'primary',
-  name: 'Primary School',
-  location: 'Central District',
-  image: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
+  name: 'Vendramini Pre-Primary Catholic School',
+  location: 'Jua kali',
+  image: '/images/20250104_104747.jpg',
   description: 'Comprehensive education for students aged 6-13, with a focus on academic excellence and character development.',
   color: 'bg-white'
 }];

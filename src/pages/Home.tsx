@@ -16,9 +16,9 @@ const Home = () => {
         <div className="container mx-auto px-4">
           <div className="flex flex-col lg:flex-row items-center">
             <div className="lg:w-1/2 mb-10 lg:mb-0 lg:pr-10">
-              <SectionTitle title="Welcome to BrightFuture Schools" subtitle="Where education meets innovation in a nurturing environment." />
+              <SectionTitle title="Welcome to Vendramini Schools" subtitle="Where education meets innovation in a nurturing environment." />
               <p className="text-gray-600 mb-6">
-                At BrightFuture, we believe in providing a holistic education
+                At Vendramini, we believe in providing a holistic education
                 that nurtures not just academic excellence, but also creativity,
                 character, and confidence. Our four campuses serve children from
                 ages 3 to 13, providing a seamless educational journey.
@@ -35,12 +35,20 @@ const Home = () => {
             <div className="lg:w-1/2">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-4">
-                  <img src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" alt="Students in classroom" className="rounded-lg shadow-md w-full h-48 object-cover" />
-                  <img src="https://images.unsplash.com/photo-1577896851231-70ef18881754?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" alt="School library" className="rounded-lg shadow-md w-full h-64 object-cover" />
+                  <img src="/images/20250116_162154.jpg" 
+                  alt="Students in classroom" 
+                  className="rounded-lg shadow-md w-full h-48 object-cover" />
+                  <img src="/images/20250116_170704.jpg" 
+                  alt="School library" 
+                  className="rounded-lg shadow-md w-full h-64 object-cover" />
                 </div>
                 <div className="space-y-4 mt-8">
-                  <img src="https://images.unsplash.com/photo-1588075592446-265fd1e6e76f?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" alt="Art class" className="rounded-lg shadow-md w-full h-64 object-cover" />
-                  <img src="https://images.unsplash.com/photo-1580582932707-520aed937b7b?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" alt="Sports activities" className="rounded-lg shadow-md w-full h-48 object-cover" />
+                  <img src="/images/20250129_132339.jpg"
+                   alt="Art class" 
+                   className="rounded-lg shadow-md w-full h-64 object-cover" />
+                  <img src="/images/20250129_115716.jpg" 
+                  alt="Sports activities" 
+                  className="rounded-lg shadow-md w-full h-48 object-cover" />
                 </div>
               </div>
             </div>

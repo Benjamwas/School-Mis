@@ -4,6 +4,7 @@ import Button from '../components/ui/Button';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { MapPinIcon, PhoneIcon, MailIcon, ClockIcon } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
+import api from '../api';
 import L from 'leaflet';
 // Fix Leaflet marker icon issue
 delete L.Icon.Default.prototype._getIconUrl;
@@ -14,32 +15,32 @@ L.Icon.Default.mergeOptions({
 });
 const campusLocations = [{
   id: 'pre-primary-1',
-  name: 'Pre-Primary Campus 1',
-  address: '123 North Avenue, North District',
+  name: 'Vendramini Pambazuko',
+  address: 'Kahawa West, Next to Farmers Choice',
   position: [51.505, -0.09],
-  phone: '(123) 456-7890',
-  email: 'preprimary1@brightfuture.edu'
+  phone: '0114468263 / 0722217531',
+  email: 'pambazuko@vendramini.sc.ke'
 }, {
   id: 'pre-primary-2',
-  name: 'Pre-Primary Campus 2',
-  address: '456 East Boulevard, East District',
+  name: 'Vendramini Marengeta',
+  address: 'Kahawa West, Kamae',
   position: [51.51, -0.1],
-  phone: '(123) 456-7891',
-  email: 'preprimary2@brightfuture.edu'
+  phone: '0114468263 / 0722217531',
+  email: 'marengeta@vendramini.sc.ke'
 }, {
   id: 'pre-primary-3',
-  name: 'Pre-Primary Campus 3',
-  address: '789 West Street, West District',
+  name: 'Vendramini Kongo',
+  address: 'Kahawa West, Kongo ',
   position: [51.5, -0.12],
-  phone: '(123) 456-7892',
-  email: 'preprimary3@brightfuture.edu'
+  phone: '0114468263 / 0722217531',
+  email: 'Kongo@vendramini.sc.ke'
 }, {
   id: 'primary',
-  name: 'Primary School',
-  address: '101 Central Road, Central District',
+  name: 'Vendramini Main Campus',
+  address: 'Kahawa West, Juakali Area',
   position: [51.515, -0.09],
-  phone: '(123) 456-7893',
-  email: 'primary@brightfuture.edu'
+  phone: '0114468263 / 0722217531',
+  email: 'vendramini@vendramini.sc.ke'
 }];
 const ContactUs = () => {
   const [formData, setFormData] = useState({
@@ -81,30 +82,83 @@ const ContactUs = () => {
       [name]: value
     }));
   };
-  const handleSubmit = e => {
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const handleSubmit = async e => {
     e.preventDefault();
-    // In a real application, you would send the form data to your backend
-    console.log(formData);
-    setFormSubmitted(true);
-    setFormData({
-      name: '',
-      email: '',
-      phone: '',
-      subject: '',
-      message: '',
-      campus: '',
-      childAge: ''
-    });
-    // Reset form submitted state after 5 seconds
-    setTimeout(() => {
-      setFormSubmitted(false);
-    }, 5000);
+    setErrorMessage('');
+    setLoading(true);
+
+    try {
+      let endpoint = '/emails/contactform';
+      let payload: any = {};
+
+      if (activeTab === 'contact') {
+        endpoint = 'http://localhost:5000/api/emails/contactform';
+        payload = {
+          name: formData.name,
+          email: formData.email,
+          subject: formData.subject,
+          message: formData.message
+        };
+      }
+      else if (activeTab === 'tour') {
+        endpoint = 'http://localhost:5000/api/emails/schoolsform';
+        payload = {
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          campus: formData.campus,
+          message: formData.message
+        };
+      }
+      else if (activeTab === 'enroll') {
+        endpoint = 'http://localhost:5000/api/emails/enrollmentform';
+        payload = {
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          age: Number(formData.childAge) || undefined,
+          campus: formData.campus,
+          message: formData.message
+        };
+      }
+
+      // Send request to backend
+      const res = await api.post(endpoint, payload);
+
+      if (res.status === 200) {
+        setFormSubmitted(true);
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          subject: '',
+          message: '',
+          campus: '',
+          childAge: ''
+        });
+
+        // Reset form submitted state after 5 seconds
+        setTimeout(() => {
+          setFormSubmitted(false);
+        }, 5000);
+      } else {
+        setErrorMessage('Unexpected response from server');
+      }
+    } catch (err: any) {
+      console.error('submit error', err);
+      setErrorMessage(err?.response?.data?.error || err.message || 'Failed to submit form');
+    } finally {
+      setLoading(false);
+    }
   };
   return <div className="w-full pt-20">
       {/* Hero Section */}
       <section className="relative py-20 bg-gray-100">
         <div className="absolute inset-0 bg-cover bg-center opacity-20" style={{
-        backgroundImage: "url('https://images.unsplash.com/photo-1577896851231-70ef18881754?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80')"
+        backgroundImage: "/images/20250104_1047.jpg"
       }}></div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-3xl mx-auto text-center">
@@ -193,7 +247,7 @@ const ContactUs = () => {
                 Enrollment Information
               </button>
             </div>
-            {/* Success Message */}
+            {/* Success/Error Message */}
             {formSubmitted && <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6 flex items-start">
                 <svg className="h-5 w-5 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
@@ -204,6 +258,10 @@ const ContactUs = () => {
                     We'll get back to you as soon as possible.
                   </p>
                 </div>
+              </div>}
+            {errorMessage && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+                <p className="font-bold">Submission failed</p>
+                <p className="text-sm">{errorMessage}</p>
               </div>}
             {/* Contact Form */}
             {activeTab === 'contact' && <div>
@@ -238,8 +296,8 @@ const ContactUs = () => {
                     <textarea id="message" name="message" rows={5} value={formData.message} onChange={handleInputChange} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent" required></textarea>
                   </div>
                   <div>
-                    <Button type="submit" variant="primary">
-                      Send Message
+                    <Button type="submit" variant="primary" disabled={loading}>
+                      {loading ? 'Sending...' : 'Send Message'}
                     </Button>
                   </div>
                 </form>
@@ -277,16 +335,16 @@ const ContactUs = () => {
                       </label>
                       <select id="campus" name="campus" value={formData.campus} onChange={handleInputChange} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent" required>
                         <option value="">Select a campus</option>
-                        <option value="pre-primary-1">
-                          Pre-Primary Campus 1
+                        <option value="Pambazuko">
+                          Pambazuko
                         </option>
-                        <option value="pre-primary-2">
-                          Pre-Primary Campus 2
+                        <option value="Kongo">
+                          Kongo
                         </option>
-                        <option value="pre-primary-3">
-                          Pre-Primary Campus 3
+                        <option value="Marengeta">
+                          Marengeta
                         </option>
-                        <option value="primary">Primary School</option>
+                        <option value="primary">Vendramini School</option>
                       </select>
                     </div>
                   </div>
@@ -297,8 +355,8 @@ const ContactUs = () => {
                     <textarea id="message" name="message" rows={4} value={formData.message} onChange={handleInputChange} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"></textarea>
                   </div>
                   <div>
-                    <Button type="submit" variant="primary">
-                      Request Tour
+                    <Button type="submit" variant="primary" disabled={loading}>
+                      {loading ? 'Sending...' : 'Request Tour'}
                     </Button>
                   </div>
                 </form>
@@ -356,16 +414,16 @@ const ContactUs = () => {
                     </label>
                     <select id="campus" name="campus" value={formData.campus} onChange={handleInputChange} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent" required>
                       <option value="">Select a campus</option>
-                      <option value="pre-primary-1">
-                        Pre-Primary Campus 1
+                      <option value="Pambazuko">
+                        Pambazuko
                       </option>
-                      <option value="pre-primary-2">
-                        Pre-Primary Campus 2
+                      <option value="Kongo">
+                        Kongo
                       </option>
-                      <option value="pre-primary-3">
-                        Pre-Primary Campus 3
+                      <option value="Marengeta">
+                        Marengeta
                       </option>
-                      <option value="primary">Primary School</option>
+                      <option value="primary">Vendramini School</option>
                     </select>
                   </div>
                   <div>
@@ -375,8 +433,8 @@ const ContactUs = () => {
                     <textarea id="message" name="message" rows={4} value={formData.message} onChange={handleInputChange} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"></textarea>
                   </div>
                   <div>
-                    <Button type="submit" variant="primary">
-                      Request Information
+                    <Button type="submit" variant="primary" disabled={loading}>
+                      {loading ? 'Sending...' : 'Request Information'}
                     </Button>
                   </div>
                 </form>
