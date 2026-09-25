@@ -1,0 +1,85 @@
+import React from 'react';
+import { CalendarDaysIcon, MapPinIcon } from 'lucide-react';
+import { Badge, Button, Card, CardHeader, PageHeader } from '../../components/ui/primitives';
+import { EVENTS } from '../../data/school';
+
+export function ParentEvents() {
+  return (
+    <div>
+      <PageHeader title="School calendar" subtitle="Term 3 · 2026 — events relevant to Grade 4 Acacia and Grade 1 Baobab." />
+
+      <div className="grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
+        <Card>
+          <CardHeader title="Upcoming events" subtitle="5 events in the next six weeks" />
+          <ul className="divide-y divide-line">
+            {EVENTS.map((e) =>
+            <li key={e.id} className="px-5 py-4 flex flex-wrap items-start gap-4">
+                <div className="w-14 shrink-0 rounded-lg bg-forest-50 text-center py-2">
+                  <span className="block text-[18px] font-semibold text-forest-800 leading-none">{e.date.split(' ')[0]}</span>
+                  <span className="block text-[11px] uppercase text-forest-600 mt-1">{e.date.split(' ')[1]}</span>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-[15px] font-medium text-ink">{e.title}</p>
+                    <Badge tone="neutral">{e.type}</Badge>
+                  </div>
+                  <p className="mt-1 text-[13px] text-ink-muted flex flex-wrap items-center gap-x-4 gap-y-1">
+                    <span className="flex items-center gap-1.5">
+                      <CalendarDaysIcon size={14} /> {e.time}
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <MapPinIcon size={14} /> {e.location}
+                    </span>
+                  </p>
+                </div>
+                {e.type === 'Parent Event' &&
+              <Button size="sm" variant="secondary">
+                    Book a slot
+                  </Button>
+              }
+              </li>
+            )}
+          </ul>
+        </Card>
+
+        <div className="space-y-6">
+          <Card className="p-5">
+            <h3 className="text-[15px] font-semibold text-ink">Term dates</h3>
+            <dl className="mt-3 divide-y divide-line text-[13.5px]">
+              {[
+              ['Term 3 begins', '1 September 2026'],
+              ['Mid-term break', '9 – 13 October 2026'],
+              ['Assessments', '20 – 30 October 2026'],
+              ['Term 3 ends', '6 November 2026'],
+              ['Term 1 2027 begins', '6 January 2027']].
+              map(([k, v]) =>
+              <div key={k} className="flex justify-between gap-4 py-2.5">
+                  <dt className="text-ink-muted">{k}</dt>
+                  <dd className="font-medium text-ink">{v}</dd>
+                </div>
+              )}
+            </dl>
+          </Card>
+
+          <Card className="p-5">
+            <h3 className="text-[15px] font-semibold text-ink">Your RSVPs</h3>
+            <ul className="mt-3 space-y-3 text-[13.5px]">
+              <li className="flex items-center justify-between gap-3">
+                <span className="text-ink">Consultation Day</span>
+                <Badge tone="pending">Booking opens Monday</Badge>
+              </li>
+              <li className="flex items-center justify-between gap-3">
+                <span className="text-ink">Athletics Gala</span>
+                <Badge tone="success">Attending</Badge>
+              </li>
+              <li className="flex items-center justify-between gap-3">
+                <span className="text-ink">Grade 5 Trip</span>
+                <Badge tone="neutral">Not applicable</Badge>
+              </li>
+            </ul>
+          </Card>
+        </div>
+      </div>
+    </div>);
+
+}
