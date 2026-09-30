@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Badge, Card, CardHeader, PageHeader, cx } from '../../components/ui/primitives';
 import { DUTY_ROSTER } from '../../data/hr';
 import { EVENTS } from '../../data/school';
+import { useApiLive, useList } from '../../api/hooks';
+import type { ApiEvent } from '../../api/types';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 const PERIODS = ['8:00', '9:20', '10:50', '12:00', '2:00'];
@@ -14,10 +16,50 @@ const TIMETABLE: Record<string, (string | null)[]> = {
   Friday: ['Maths · G4', 'Science · G4', 'Maths · G4', 'Pastoral · G4', 'Games']
 };
 
+function titleCase(value: string): string {
+  if (!value) return '—';
+  return value.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function dayMonth(value: string): string {
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function clockTime(value?: string): string {
+  if (!value) return '—';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return '—';
+  return d.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' });
+}
+
 export function TeacherCalendar() {
+  const live = useApiLive();
+  const eventsRes = useList<ApiEvent>('/events/');
+
+  const liveEvents = useMemo(() => {
+    if (!eventsRes.data) return null;
+    return eventsRes.data.map((e) => ({
+      id: e.id,
+      title: e.title,
+      date: dayMonth(e.start_time),
+      time: e.end_time ? `${clockTime(e.start_time)} – ${clockTime(e.end_time)}` : clockTime(e.start_time),
+      type: titleCase(e.event_type ?? ''),
+      location: e.venue ?? '—',
+      status: titleCase(e.status)
+    }));
+  }, [eventsRes.data]);
+
+  const events = liveEvents ?? EVENTS;
+
   return (
     <div>
       <PageHeader title="My calendar" subtitle="Term 3 timetable, duties and school events in one view." />
+
+      {live && eventsRes.error &&
+      <p className="text-sm text-rose-600">{eventsRes.error}</p>
+      }
 
       <Card className="overflow-hidden">
         <CardHeader title="Weekly timetable" subtitle="Grade 4 Acacia · 23 periods per week" />
@@ -97,6 +139,9 @@ export function TeacherCalendar() {
                 </div>
               </li>
             )}
+            {events.length === 0 &&
+            <li className="px-5 py-4 text-[13px] text-ink-muted">No events scheduled.</li>
+            }
           </ul>
         </Card>
       </div>

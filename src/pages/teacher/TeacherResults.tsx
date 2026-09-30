@@ -1,19 +1,74 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { DownloadIcon, SendIcon } from 'lucide-react';
-import { Avatar, Badge, Button, Card, CardHeader, PageHeader, Stat } from '../../components/ui/primitives';
+import { Avatar, Badge, Button, Card, CardHeader, PageHeader, Stat, StatusBadge } from '../../components/ui/primitives';
 import { BarChartBlock, ChartFrame, DataTable, FilterSelect, LineChartBlock, Tabs } from '../../components/ui/data';
 import { CLASS_SUBJECT_AVERAGES, SUBJECT_SCORES, TERM_TREND } from '../../data/academics';
 import { STUDENTS } from '../../data/people';
 import { useApp } from '../../contexts/AppContext';
+import { useApiLive, useList } from '../../api/hooks';
 
 const TABS = ['Assessments', 'Class results', 'Analysis'];
 
+interface ResultRow {
+  id: string;
+  subject: string;
+  student: string;
+  term: string;
+  score: number;
+  grade: string;
+  previous: number;
+  teacher: string;
+  comment: string;
+  status: string;
+}
+
+function titleCase(value: string): string {
+  if (!value) return '—';
+  return value.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function asScore(value: unknown): number {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : 0;
+}
+
 export function TeacherResults() {
   const { role, toast } = useApp();
+  const live = useApiLive();
+  const results = useList<Record<string, unknown>>('/subjects/results/');
   const [tab, setTab] = useState(TABS[0]);
   const [term, setTerm] = useState('Term 3 · 2026');
   const learners = STUDENTS.filter((s) => s.className === 'Grade 4');
   const subjectOnly = role === 'subjectteacher';
+
+  const liveResults = useMemo<ResultRow[] | null>(() => {
+    if (!results.data) return null;
+    return results.data.map((r) => ({
+      id: String(r.id ?? ''),
+      subject: String(r.subject_name ?? r.subject ?? '—'),
+      student: String(r.student_name ?? '—'),
+      term: String(r.term_name ?? '—'),
+      score: asScore(r.total_score),
+      grade: String(r.grade ?? '—'),
+      previous: 0,
+      teacher: '—',
+      comment: String(r.teacher_comment ?? ''),
+      status: titleCase(String(r.status ?? ''))
+    }));
+  }, [results.data]);
+
+  const insight = liveResults ?? SUBJECT_SCORES.map((s) => ({
+    id: s.subject,
+    subject: s.subject,
+    student: '—',
+    term: '—',
+    score: s.score,
+    grade: s.grade,
+    previous: s.previous,
+    teacher: s.teacher,
+    comment: s.comment,
+    status: 'Recorded'
+  }));
 
   return (
     <div>
@@ -32,6 +87,10 @@ export function TeacherResults() {
           </>
         } />
       
+
+      {live && results.error &&
+      <p className="text-sm text-rose-600">{results.error}</p>
+      }
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Stat label="Class average" value="74%" sub="Up 3 points from Term 2" tone="primary" />
@@ -68,7 +127,27 @@ export function TeacherResults() {
       }
 
       {tab === 'Class results' &&
-      <Card>
+      <div className="space-y-6">
+          {liveResults &&
+          <Card>
+            <CardHeader title="Recorded results" subtitle={`${liveResults.length} results from the API`} />
+            <DataTable
+            columns={[
+            { key: 'student', header: 'Learner', render: (r: any) => <span className="font-medium">{r.student}</span> },
+            { key: 'subject', header: 'Subject', hideOnMobile: true },
+            { key: 'term', header: 'Term', hideOnMobile: true },
+            { key: 'score', header: 'Score', align: 'right' },
+            { key: 'grade', header: 'Grade', align: 'right' },
+            { key: 'status', header: 'Status', render: (r: any) => <StatusBadge status={r.status} /> }
+            ]
+            }
+            rows={liveResults}
+            mobileTitle={(r: any) => `${r.student} · ${r.subject}`}
+            caption="Recorded results" />
+          
+          </Card>
+          }
+          <Card>
           <CardHeader title="Learner results" subtitle={term} />
           <DataTable
           columns={[
@@ -93,6 +172,7 @@ export function TeacherResults() {
           caption="Learner results" />
         
         </Card>
+      </div>
       }
 
       {tab === 'Analysis' &&
@@ -111,10 +191,10 @@ export function TeacherResults() {
             <LineChartBlock data={TERM_TREND} xKey="term" lines={[{ key: 'average', name: 'Class average', color: '#1F5E43' }]} />
           </ChartFrame>
           <Card className="lg:col-span-2">
-            <CardHeader title="Topic-level insight" subtitle="Where the class is losing marks" />
+            <CardHeader title="Topic-level insight" subtitle={liveResults ? 'Live results from the API' : 'Where the class is losing marks'} />
             <ul className="divide-y divide-line">
-              {SUBJECT_SCORES.map((s) =>
-            <li key={s.subject} className="px-5 py-3.5 flex flex-wrap items-center justify-between gap-3">
+              {insight.map((s) =>
+            <li key={s.id} className="px-5 py-3.5 flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <p className="text-[14px] font-medium text-ink">{s.subject}</p>
                     <p className="text-[12.5px] text-ink-muted">{s.comment}</p>
@@ -122,6 +202,9 @@ export function TeacherResults() {
                   <Badge tone={s.score < 60 ? 'warning' : 'success'}>Class {s.score}%</Badge>
                 </li>
             )}
+            {insight.length === 0 &&
+            <li className="px-5 py-4 text-[13px] text-ink-muted">No results recorded yet.</li>
+            }
             </ul>
           </Card>
         </div>

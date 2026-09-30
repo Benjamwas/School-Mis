@@ -68,8 +68,8 @@ export function SalaMark({
 
 
 }: {className?: string;tone?: 'forest' | 'white';}) {
-  const bg = tone === 'white' ? 'bg-white text-forest-800' : 'bg-forest-700 text-white';
-  return <span className={`grid place-items-center rounded-lg font-serif font-semibold tracking-tight ${bg} ${className}`} aria-hidden="true">
+  const bg = tone === 'white' ? 'bg-white text-navy' : 'bg-navy text-gold';
+  return <span className={`grid place-items-center rounded-lg font-heading font-bold tracking-tight ${bg} ${className}`} aria-hidden="true">
       SA
     </span>;
 }

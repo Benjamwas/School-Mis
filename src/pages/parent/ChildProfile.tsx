@@ -1,4 +1,3 @@
-import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { CheckCircle2Icon, DownloadIcon, LightbulbIcon, MessageSquareIcon, TargetIcon } from 'lucide-react';
 import { Avatar, Badge, Button, Card, CardHeader, PageHeader, Progress, StatusBadge, cx } from '../../components/ui/primitives';
@@ -17,14 +16,31 @@ import {
   TERM_TREND } from
 '../../data/academics';
 import { STUDENTS, TEACHERS } from '../../data/people';
+import { useApiLive, useDetail, useObject } from '../../api/hooks';
+import type { ApiStudent } from '../../api/types';
 
 const TABS = ['Overview', 'Academics', 'Personalised learning', 'Assignments', 'Attendance', 'Results', 'Communication'];
 
 export function ChildProfile() {
   const { id = 's1', tab = 'Overview' } = useParams();
   const navigate = useNavigate();
-  const child = STUDENTS.find((s) => s.id === id) ?? STUDENTS[0];
+  const live = useApiLive();
+  const studentRes = useDetail<ApiStudent>('/students/', id);
+  const attendanceRes = useObject<Record<string, number>>(`/students/${id}/attendance/`);
+  const academicRes = useObject<Record<string, unknown>>(`/students/${id}/academic_summary/`);
   const average = Math.round(SUBJECT_SCORES.reduce((a, s) => a + s.score, 0) / SUBJECT_SCORES.length);
+  const demoChild = STUDENTS.find((s) => s.id === id) ?? STUDENTS[0];
+  const child = live && studentRes.data ? {
+    ...demoChild,
+    id: studentRes.data.id,
+    name: studentRes.data.full_name,
+    admissionNo: studentRes.data.admission_number,
+    className: studentRes.data.current_class_name ?? demoChild.className,
+    status: studentRes.data.status
+  } : demoChild;
+  const liveAverage = academicRes.data?.subject_performance as { total_score?: string }[] | undefined;
+  const averageValue = liveAverage?.length ? Math.round(liveAverage.reduce((sum, result) => sum + Number(result.total_score ?? 0), 0) / liveAverage.length) : average;
+  const attendanceValue = attendanceRes.data?.percentage ?? ATTENDANCE_SUMMARY.percentage;
 
   return (
     <div>
@@ -66,9 +82,9 @@ export function ChildProfile() {
               </div>
               <dl className="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-4 border-t border-line pt-4">
                 {[
-              ['Term average', `${average}%`],
+               ['Term average', `${averageValue}%`],
               ['Class position', '9 of 26'],
-              ['Attendance', `${ATTENDANCE_SUMMARY.percentage}%`],
+               ['Attendance', `${attendanceValue}%`],
               ['Assignments on time', '9 of 11']].
               map(([k, v]) =>
               <div key={k}>

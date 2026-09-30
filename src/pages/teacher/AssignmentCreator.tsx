@@ -1,13 +1,18 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { EyeIcon, PaperclipIcon, SendIcon } from 'lucide-react';
 import { Badge, Button, Card, CardHeader, Field, Input, PageHeader, Select, Textarea } from '../../components/ui/primitives';
 import { Alert, ConfirmDialog } from '../../components/ui/feedback';
 import { useApp } from '../../contexts/AppContext';
+import { api } from '../../api/client';
+import { useApiLive, useList } from '../../api/hooks';
+import type { ApiTeachingAssignment } from '../../api/types';
 
 export function AssignmentCreator() {
   const navigate = useNavigate();
   const { toast } = useApp();
+  const live = useApiLive();
+  const teachingAssignments = useList<ApiTeachingAssignment>('/subjects/teaching-assignments/');
   const [preview, setPreview] = useState(false);
   const [confirm, setConfirm] = useState(false);
   const [form, setForm] = useState({
@@ -23,8 +28,29 @@ export function AssignmentCreator() {
   });
   const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
-  const publish = () => {
+  const publish = async () => {
     setConfirm(false);
+    if (live) {
+      const teaching = teachingAssignments.data?.find((item) => item.class_name === form.className && item.subject_name === form.subject);
+      if (!teaching) {
+        toast({ tone: 'warning', title: 'Teaching assignment not found', body: 'Choose a class and subject assigned to your account.' });
+        return;
+      }
+      try {
+        const assignment = await api.post<Record<string, unknown>>('/subjects/assignments/', {
+          teaching_assignment: teaching.id,
+          title: form.title,
+          instructions: form.instructions,
+          max_marks: Number(form.marks),
+          due_date: form.due ? `${form.due}T23:59:00` : null,
+          submission_type: form.type === 'Online quiz' ? 'QUIZ' : form.type === 'File upload only' ? 'FILE' : 'BOTH'
+        });
+        await api.post(`/subjects/assignments/${assignment.id}/publish/`);
+      } catch (error) {
+        toast({ tone: 'warning', title: 'Assignment could not be published', body: error instanceof Error ? error.message : 'Please try again.' });
+        return;
+      }
+    }
     toast({ tone: 'success', title: 'Assignment published', body: '26 learners and their parents have been notified.' });
     navigate('/teacher/assignments');
   };

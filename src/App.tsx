@@ -80,6 +80,8 @@ import { SuperModules } from './pages/super/SuperModules';
 import { SuperAudit } from './pages/super/SuperAudit';
 import { SuperSettings } from './pages/super/SuperSettings';
 
+import { PORTAL_ROLES } from './data/navigation';
+
 type DemoRole =
 'visitor' |
 'parent' |
@@ -111,7 +113,7 @@ export function App({ initialRole = 'visitor' }: {initialRole?: DemoRole;}) {
             <Route path="*" element={<NotFound />} />
           </Route>
 
-          <Route element={<RequireAuth><PortalShell /></RequireAuth>}>
+          <Route element={<RequireAuth allow={PORTAL_ROLES.parent}><PortalShell /></RequireAuth>}>
             {/* Parent */}
             <Route path="/parent" element={<ParentDashboard />} />
             <Route path="/parent/children" element={<ParentChildren />} />
@@ -121,7 +123,9 @@ export function App({ initialRole = 'visitor' }: {initialRole?: DemoRole;}) {
             <Route path="/parent/messages" element={<ParentMessages />} />
             <Route path="/parent/events" element={<ParentEvents />} />
             <Route path="/parent/profile" element={<ParentProfile />} />
+          </Route>
 
+          <Route element={<RequireAuth allow={PORTAL_ROLES.student}><PortalShell /></RequireAuth>}>
             {/* Student */}
             <Route path="/student" element={<StudentDashboard />} />
             <Route path="/student/learning" element={<StudentLearning />} />
@@ -133,7 +137,9 @@ export function App({ initialRole = 'visitor' }: {initialRole?: DemoRole;}) {
             <Route path="/student/progress" element={<StudentProgress />} />
             <Route path="/student/achievements" element={<StudentAchievements />} />
             <Route path="/student/profile" element={<StudentProfile />} />
+          </Route>
 
+          <Route element={<RequireAuth allow={PORTAL_ROLES.teacher}><PortalShell /></RequireAuth>}>
             {/* Teacher */}
             <Route path="/teacher" element={<TeacherDashboard />} />
             <Route path="/teacher/classes" element={<TeacherClasses />} />
@@ -151,7 +157,9 @@ export function App({ initialRole = 'visitor' }: {initialRole?: DemoRole;}) {
             <Route path="/teacher/hr" element={<Navigate to="/teacher/hr/My attendance" replace />} />
             <Route path="/teacher/hr/:tab" element={<TeacherHR />} />
             <Route path="/teacher/profile" element={<TeacherProfile />} />
+          </Route>
 
+          <Route element={<RequireAuth allow={PORTAL_ROLES.admin}><PortalShell /></RequireAuth>}>
             {/* School admin */}
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/admissions" element={<AdminAdmissions />} />
@@ -165,21 +173,35 @@ export function App({ initialRole = 'visitor' }: {initialRole?: DemoRole;}) {
             <Route path="/admin/academics" element={<AdminAcademics />} />
             <Route path="/admin/attendance" element={<AdminAttendance />} />
             <Route path="/admin/communication" element={<AdminCommunication />} />
+            <Route path="/admin/content" element={<Navigate to="/admin/content/Events" replace />} />
             <Route path="/admin/content/:tab" element={<AdminContent />} />
             <Route path="/admin/reports" element={<AdminReports />} />
             <Route path="/admin/settings" element={<AdminSettings />} />
+          </Route>
 
-            {/* Finance & HR */}
+          <Route element={<RequireAuth allow={PORTAL_ROLES.finance}><PortalShell /></RequireAuth>}>
+            {/* Finance */}
+            <Route path="/finance" element={<Navigate to="/finance/overview" replace />} />
             <Route path="/finance/:tab" element={<FinancePortal />} />
-            <Route path="/hr/:tab" element={<HRPortal />} />
+          </Route>
 
+          <Route element={<RequireAuth allow={PORTAL_ROLES.hr}><PortalShell /></RequireAuth>}>
+            {/* HR */}
+            <Route path="/hr" element={<Navigate to="/hr/overview" replace />} />
+            <Route path="/hr/:tab" element={<HRPortal />} />
+          </Route>
+
+          <Route element={<RequireAuth allow={PORTAL_ROLES.super}><PortalShell /></RequireAuth>}>
             {/* Super admin */}
             <Route path="/super" element={<SuperDashboard />} />
             <Route path="/super/schools" element={<SuperSchools />} />
             <Route path="/super/school/:id" element={<SuperSchoolDetail />} />
+            <Route path="/super/users" element={<Navigate to="/super/users/Administrators" replace />} />
             <Route path="/super/users/:tab" element={<SuperUsers />} />
             <Route path="/super/modules" element={<SuperModules />} />
+            <Route path="/super/audit" element={<Navigate to="/super/audit/Audit logs" replace />} />
             <Route path="/super/audit/:tab" element={<SuperAudit />} />
+            <Route path="/super/settings" element={<Navigate to="/super/settings/Platform" replace />} />
             <Route path="/super/settings/:tab" element={<SuperSettings />} />
           </Route>
         </Routes>

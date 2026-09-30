@@ -56,25 +56,27 @@ interface RequestOptions {
 }
 
 async function request<T>(path: string, { method = 'GET', body }: RequestOptions = {}): Promise<T> {
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  const multipart = typeof FormData !== 'undefined' && body instanceof FormData;
   const headers: Record<string, string> = {};
   if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
   if (currentSchoolId) headers['X-School-Id'] = currentSchoolId;
-  if (body !== undefined) headers['Content-Type'] = 'application/json';
+  if (body !== undefined && !multipart) headers['Content-Type'] = 'application/json';
 
   let res: Response;
   try {
-    res = await fetch(`${API_BASE}${path}`, {
+    res = await fetch(`${API_BASE}${normalizedPath}`, {
       method,
       headers,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      body: body !== undefined ? (multipart ? body : JSON.stringify(body)) : undefined,
     });
   } catch {
     throw new ApiError('Network error — is the backend running?', 0);
   }
 
-  if (res.status === 401 && accessToken && getRefreshToken() && !path.startsWith('/auth/')) {
+  if (res.status === 401 && accessToken && getRefreshToken() && !normalizedPath.startsWith('/auth/')) {
     if (await refreshSession()) {
-      return request<T>(path, { method, body });
+      return request<T>(normalizedPath, { method, body });
     }
   }
 
@@ -90,7 +92,7 @@ async function request<T>(path: string, { method = 'GET', body }: RequestOptions
     throw new ApiError(err.error?.message || `Request failed (${res.status})`, res.status, err.error?.code);
   }
 
-  if (payload && typeof payload === 'object' && 'success' in payload) {
+  if (payload && typeof payload === 'object' && 'data' in payload) {
     return (payload as { data: T }).data ?? (payload as T);
   }
   return payload as T;
@@ -109,8 +111,9 @@ async function refreshSession(): Promise<boolean> {
       clearTokens();
       return false;
     }
-    const payload = (await res.json()) as { data?: { access: string; refresh?: string } };
-    const data = payload?.data ?? payload;
+    const payload = (await res.json()) as { data?: { access: string; refresh?: string } } | { access: string; refresh?: string };
+    const data = ('data' in payload ? payload.data : payload) as { access: string; refresh?: string } | undefined;
+    if (!data) return false;
     storeTokens(data.access, data.refresh);
     return true;
   } catch {
@@ -122,6 +125,9 @@ async function refreshSession(): Promise<boolean> {
 export const api = {
   get: <T>(path: string) => request<T>(path),
   post: <T>(path: string, body?: unknown) => request<T>(path, { method: 'POST', body }),
+  patch: <T>(path: string, body?: unknown) => request<T>(path, { method: 'PATCH', body }),
+  put: <T>(path: string, body?: unknown) => request<T>(path, { method: 'PUT', body }),
+  delete: <T>(path: string) => request<T>(path, { method: 'DELETE' }),
 };
 
 export interface Tokens {

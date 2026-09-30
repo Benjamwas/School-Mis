@@ -7,13 +7,55 @@ import { Modal } from '../../components/ui/feedback';
 import { TEACHERS } from '../../data/people';
 import { DUTY_ROSTER, HR_TICKETS, STAFF_LEAVE_QUEUE } from '../../data/hr';
 import { formatKES } from '../../data/finance';
+import { useApiLive, useList } from '../../api/hooks';
+import type { ApiEmployee } from '../../api/types';
 
 const TABS = ['Directory', 'Allocation', 'Leave', 'Duties', 'HR tickets'];
+
+const STAFF_STATUS: Record<string, string> = {
+  ACTIVE: 'Active',
+  ON_LEAVE: 'On Leave',
+  SUSPENDED: 'Suspended',
+  TERMINATED: 'Terminated',
+  RESIGNED: 'Resigned'
+};
+
+function staffStatus(status?: string): string {
+  if (!status) return 'On Leave';
+  return STAFF_STATUS[status] ?? 'On Leave';
+}
+
+function isTeaching(e: ApiEmployee): boolean {
+  if ((e as unknown as { is_teacher?: boolean }).is_teacher === true) return true;
+  return /teach/i.test(`${e.role_title ?? ''} ${e.department_name ?? ''} ${e.department ?? ''}`);
+}
 
 export function AdminTeachers() {
   const [tab, setTab] = useState(TABS[0]);
   const [open, setOpen] = useState<string | null>(null);
-  const teacher = TEACHERS.find((t) => t.id === open);
+
+  const live = useApiLive();
+  const employees = useList<ApiEmployee>('hr/employees/');
+
+  const teachers: any[] = live
+    ? (employees.data ?? []).filter(isTeaching).map((e) => {
+      const name = e.full_name || e.person?.full_name || '—';
+      return {
+        id: e.id,
+        name,
+        role: e.role_title || 'Teacher',
+        subjects: [] as string[],
+        classes: [] as string[],
+        email: e.person?.email ?? '',
+        phone: e.person?.phone ?? '',
+        staffNo: e.employee_number || '',
+        baseSalary: e.base_salary ?? '',
+        status: staffStatus(e.employment_status)
+      };
+    })
+    : TEACHERS;
+
+  const teacher = teachers.find((t) => t.id === open);
 
   return (
     <div>
@@ -40,7 +82,10 @@ export function AdminTeachers() {
 
       {tab === 'Directory' &&
       <Card>
-          <CardHeader title={`${TEACHERS.length} staff records`} />
+          <CardHeader title={`${teachers.length} staff records`} />
+          {live && employees.error &&
+          <p className="px-5 pt-3 text-sm text-rose-600">{employees.error}</p>
+          }
           <DataTable
           columns={[
           {
@@ -71,7 +116,7 @@ export function AdminTeachers() {
 
           }]
           }
-          rows={TEACHERS}
+          rows={teachers}
           mobileTitle={(r: any) => r.name}
           caption="Teacher directory" />
         
@@ -82,7 +127,7 @@ export function AdminTeachers() {
       <Card>
           <CardHeader title="Teaching allocation" subtitle="Subjects and classes per teacher" />
           <ul className="divide-y divide-line">
-            {TEACHERS.map((t) =>
+            {teachers.map((t) =>
           <li key={t.id} className="px-5 py-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <p className="text-[14.5px] font-medium text-ink">{t.name}</p>
@@ -165,7 +210,7 @@ export function AdminTeachers() {
             ['Phone', teacher.phone],
             ['Subjects', teacher.subjects.join(', ')],
             ['Classes', teacher.classes.join(', ')],
-            ['Gross monthly', formatKES(112000)],
+            ['Gross monthly', teacher.baseSalary ? formatKES(Number(teacher.baseSalary)) : formatKES(112000)],
             ['Attendance (Sep)', '98%']].
             map(([k, v]) =>
             <div key={k}>

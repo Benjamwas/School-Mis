@@ -1,21 +1,62 @@
-import React, { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { FileTextIcon, PaperclipIcon, UploadCloudIcon } from 'lucide-react';
 import { Button, Card, CardHeader, PageHeader, StatusBadge, Textarea } from '../../components/ui/primitives';
 import { Alert, ConfirmDialog } from '../../components/ui/feedback';
 import { ASSIGNMENTS, LESSON } from '../../data/academics';
 import { useApp } from '../../contexts/AppContext';
+import { api } from '../../api/client';
+import { useApiLive, useDetail } from '../../api/hooks';
 
 export function StudentAssignment() {
   const { id = 'a1' } = useParams();
-  const assignment = ASSIGNMENTS.find((a) => a.id === id) ?? ASSIGNMENTS[0];
+  const live = useApiLive();
+  const assignmentRes = useDetail<Record<string, unknown>>('/subjects/assignments/', id);
+  const apiAssignment = assignmentRes.data;
+  const assignment = live && apiAssignment ? {
+    id,
+    title: String(apiAssignment.title ?? 'Assignment'),
+    subject: String(apiAssignment.subject ?? '—'),
+    topic: String(apiAssignment.topic_name ?? apiAssignment.topic ?? '—'),
+    teacher: 'Your teacher',
+    marks: Number(apiAssignment.max_marks ?? 0),
+    due: apiAssignment.due_date ? new Date(String(apiAssignment.due_date)).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'No due date',
+    className: String(apiAssignment.class_name ?? '—'),
+    status: String(apiAssignment.my_submission_status ?? 'Not Started').replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+    feedback: String(apiAssignment.my_submission_feedback ?? ''),
+    score: apiAssignment.my_submission_marks ? Number(apiAssignment.my_submission_marks) : null,
+    instructions: String(apiAssignment.instructions ?? '')
+  } : ASSIGNMENTS.find((a) => a.id === id) ?? ASSIGNMENTS[0];
   const [status, setStatus] = useState(assignment.status);
   const [confirm, setConfirm] = useState(false);
   const [answer, setAnswer] = useState('');
+  const [file, setFile] = useState<File | null>(null);
+  const [busy, setBusy] = useState(false);
   const { toast } = useApp();
 
-  const submit = () => {
+  useEffect(() => setStatus(assignment.status), [assignment.status]);
+
+  const submit = async () => {
     setConfirm(false);
+    if (live) {
+      setBusy(true);
+      try {
+        const submission = await api.post<{ id: string }>(`/subjects/assignments/${id}/submit/`, { submission_content: answer });
+        if (file) {
+          const upload = new FormData();
+          upload.append('file', file);
+          upload.append('category', 'ASSIGNMENT_ATTACHMENT');
+          upload.append('linked_type', 'AssignmentSubmission');
+          upload.append('linked_id', submission.id);
+          await api.post('/files/uploads/', upload);
+        }
+      } catch (error) {
+        toast({ tone: 'warning', title: 'Could not submit assignment', body: error instanceof Error ? error.message : 'Please try again.' });
+        setBusy(false);
+        return;
+      }
+      setBusy(false);
+    }
     setStatus('Submitted');
     toast({ tone: 'success', title: 'Assignment submitted', body: `${assignment.title} sent to ${assignment.teacher}.` });
   };
@@ -47,7 +88,7 @@ export function StudentAssignment() {
             <CardHeader title="Instructions" />
             <div className="p-5 text-[14.5px] leading-relaxed text-ink-muted space-y-3">
               <p>
-                Use the fraction wall from Monday’s lesson to answer all eight questions. For each pair of fractions, write which is larger and explain how you
+                {('instructions' in assignment && assignment.instructions) || 'Use the lesson materials to answer the questions and explain your working.'} For each pair of fractions, write which is larger and explain how you
                 know in one sentence.
               </p>
               <ol className="list-decimal pl-5 space-y-1.5">
@@ -74,9 +115,15 @@ export function StudentAssignment() {
               <div className="rounded-lg border border-dashed border-line p-5 text-center">
                 <UploadCloudIcon size={22} className="mx-auto text-ink-soft" />
                 <p className="mt-2 text-[13.5px] text-ink">Drag a photo of your work here, or</p>
-                <Button variant="secondary" size="sm" className="mt-2" icon={<PaperclipIcon size={15} />} disabled={status === 'Submitted' || status === 'Graded'}>
-                  Choose a file
-                </Button>
+                 <label className="mt-2 inline-flex cursor-pointer items-center gap-2 rounded-lg border border-line bg-white px-3 py-2 text-sm font-medium text-ink hover:border-forest-300">
+                   <PaperclipIcon size={15} />
+                   {file ? file.name : 'Choose a file'}
+                   <input type="file" className="sr-only" onChange={(event) => setFile(event.target.files?.[0] ?? null)} disabled={status === 'Submitted' || status === 'Graded'} />
+                 </label>
+                 {/* File metadata is uploaded after the submission is created. */}
+                 <Button variant="secondary" size="sm" className="hidden" icon={<PaperclipIcon size={15} />} disabled={status === 'Submitted' || status === 'Graded'}>
+                   Choose a file
+                 </Button>
                 <p className="mt-2 text-[12px] text-ink-muted">JPG, PNG or PDF up to 10MB</p>
               </div>
               {status !== 'Submitted' && status !== 'Graded' &&
@@ -86,7 +133,7 @@ export function StudentAssignment() {
                     <Button variant="secondary" size="sm">
                       Save draft
                     </Button>
-                    <Button size="sm" onClick={() => setConfirm(true)}>
+                     <Button size="sm" onClick={() => setConfirm(true)} disabled={busy}>
                       Submit assignment
                     </Button>
                   </div>

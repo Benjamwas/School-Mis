@@ -47,6 +47,24 @@ export const ROLE_HOME: Record<Role, string> = {
   superadmin: '/super'
 };
 
+/** Which roles may enter each portal. Mirrors the role the backend issues via
+ *  `mapRole`, and is the single source of truth for route guards in `App.tsx`.
+ *  `admin` is included in finance/hr because the school-admin nav links there. */
+export const PORTAL_ROLES = {
+  parent: ['parent'],
+  student: ['student'],
+  teacher: ['classteacher', 'subjectteacher'],
+  admin: ['admin', 'superadmin'],
+  finance: ['finance', 'admin'],
+  hr: ['hr', 'admin'],
+  super: ['superadmin']
+} as const satisfies Record<string, readonly Role[]>;
+
+/** True when `role` is allowed inside `portal`. */
+export function canAccessPortal(portal: keyof typeof PORTAL_ROLES, role: Role): boolean {
+  return (PORTAL_ROLES[portal] as readonly Role[]).includes(role);
+}
+
 const PARENT_NAV: NavGroup[] = [
 {
   title: 'My family',

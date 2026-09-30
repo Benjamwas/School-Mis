@@ -3,9 +3,27 @@ import { MailIcon, PlusIcon } from 'lucide-react';
 import { Avatar, Badge, Button, Card, CardHeader, PageHeader, Stat } from '../../components/ui/primitives';
 import { DataTable, Pagination, TableToolbar, useTableState } from '../../components/ui/data';
 import { GUARDIANS, STUDENTS } from '../../data/people';
+import { useApiLive, useList } from '../../api/hooks';
+import type { ApiParent } from '../../api/types';
 
 export function AdminParents() {
-  const table = useTableState(GUARDIANS, (r, q) => r.name.toLowerCase().includes(q) || r.phone.includes(q) || r.email.toLowerCase().includes(q), 8);
+  const live = useApiLive();
+  const parents = useList<ApiParent>('parents/');
+
+  const rows: any[] = live
+    ? (parents.data ?? []).map((p) => ({
+      id: p.id,
+      name: p.full_name || p.person?.full_name || '—',
+      relationship: p.occupation || 'Guardian',
+      phone: p.person?.phone ?? '',
+      email: p.person?.email ?? '',
+      occupation: p.occupation ?? '',
+      address: '',
+      childIds: [] as string[]
+    }))
+    : GUARDIANS;
+
+  const table = useTableState(rows, (r, q) => r.name.toLowerCase().includes(q) || r.phone.includes(q) || r.email.toLowerCase().includes(q), 8);
 
   return (
     <div>
@@ -33,6 +51,9 @@ export function AdminParents() {
 
       <Card className="mt-6">
         <CardHeader title={`${table.total} guardians`} />
+        {live && parents.error &&
+        <p className="px-5 pt-3 text-sm text-rose-600">{parents.error}</p>
+        }
         <TableToolbar query={table.query} onQuery={table.setQuery} placeholder="Search name, phone or email…" />
         <DataTable
           columns={[

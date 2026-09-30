@@ -1,16 +1,68 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { DownloadIcon } from 'lucide-react';
 import { Badge, Button, Card, CardHeader, PageHeader, Stat, StatusBadge } from '../../components/ui/primitives';
 import { AreaChartBlock, BarChartBlock, ChartFrame, DataTable, Pagination, TableToolbar, Tabs, useTableState } from '../../components/ui/data';
 import { AUDIT_LOGS, INTEGRATIONS, MODULES, PLATFORM_ACTIVITY, SCHOOLS } from '../../data/platform';
+import { useApiLive, useList, useObject } from '../../api/hooks';
+import type { ApiAuditLog } from '../../api/types';
 
 const TABS = ['Audit logs', 'Analytics', 'Integrations'];
+
+interface AuditSummary {
+  by_module?: Record<string, Record<string, number>>;
+  total?: number;
+}
+
+function titleCase(value: string): string {
+  if (!value) return '—';
+  return value.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function dayMonthTime(value?: string): string {
+  if (!value) return '—';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return '—';
+  return `${d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}, ${d.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' })}`;
+}
 
 export function SuperAudit() {
   const { tab = 'Audit logs' } = useParams();
   const navigate = useNavigate();
-  const table = useTableState(AUDIT_LOGS, (r, q) => r.user.toLowerCase().includes(q) || r.action.toLowerCase().includes(q) || r.module.toLowerCase().includes(q), 6);
+  const live = useApiLive();
+  const logs = useList<ApiAuditLog>('/audit/logs');
+  const summary = useObject<AuditSummary>('/audit/summary');
+
+  const liveRows = useMemo(() => {
+    if (!logs.data) return null;
+    return logs.data.map((l) => {
+      const target = [l.entity_type, l.entity_id].filter(Boolean).join(' ');
+      return {
+        user: l.user_name || '—',
+        role: (l as unknown as { school_name?: string }).school_name ?? '—',
+        action: titleCase(String(l.action ?? '')),
+        module: titleCase(String(l.module ?? '')),
+        target: target || '—',
+        when: dayMonthTime(l.created_at),
+        status: 'Success'
+      };
+    });
+  }, [logs.data]);
+
+  const table = useTableState(
+    liveRows ?? AUDIT_LOGS,
+    (r, q) => r.user.toLowerCase().includes(q) || r.action.toLowerCase().includes(q) || String(r.module).toLowerCase().includes(q),
+    6
+  );
+
+  const moduleBreakdown = useMemo(() => {
+    const byModule = summary.data?.by_module;
+    if (!byModule) return null;
+    return Object.entries(byModule).map(([module, actions]) => ({
+      module: titleCase(module),
+      actions: Object.entries(actions).map(([action, count]) => ({ action: titleCase(action), count }))
+    }));
+  }, [summary.data]);
 
   return (
     <div>
@@ -24,13 +76,17 @@ export function SuperAudit() {
         } />
       
 
+      {live && (logs.error ?? summary.error) &&
+      <p className="text-sm text-rose-600">{logs.error ?? summary.error}</p>
+      }
+
       <div className="mb-6">
         <Tabs tabs={TABS} active={tab} onChange={(t) => navigate(`/super/audit/${t}`)} />
       </div>
 
       {tab === 'Audit logs' &&
       <Card>
-          <CardHeader title={`${table.total} recorded events`} subtitle="Last 7 days across all schools" />
+          <CardHeader title={`${table.total} recorded events`} subtitle={liveRows ? `${summary.data?.total ?? table.total} events on record` : 'Last 7 days across all schools'} />
           <TableToolbar query={table.query} onQuery={table.setQuery} placeholder="Search user, action or module…" />
           <DataTable
           columns={[
@@ -61,11 +117,32 @@ export function SuperAudit() {
       {tab === 'Analytics' &&
       <div className="space-y-6">
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <Stat label="Sessions this week" value="26,355" sub="+8% on last week" tone="primary" />
+            <Stat label="Audit events" value={summary.data?.total ?? '26,355'} sub={summary.data ? 'All time' : '+8% on last week'} tone="primary" />
             <Stat label="Daily active users" value="5,120" sub="Peak on Friday" />
             <Stat label="Mobile share" value="71%" sub="Parents and learners" tone="gold" />
             <Stat label="Average session" value="6m 12s" sub="Across all roles" />
           </div>
+          {moduleBreakdown &&
+          <Card>
+            <CardHeader title="Audit activity by module" subtitle="Grouped counts from the platform audit trail" />
+            <ul className="divide-y divide-line">
+              {moduleBreakdown.map((m) =>
+              <li key={m.module} className="px-5 py-3.5 flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="text-[14px] font-medium text-ink">{m.module}</p>
+                  <p className="text-[12.5px] text-ink-muted">
+                    {m.actions.map((a) => `${a.action} (${a.count})`).join(' · ') || '—'}
+                  </p>
+                </div>
+                <Badge tone="neutral">{m.actions.reduce((a, b) => a + b.count, 0)}</Badge>
+              </li>
+              )}
+              {moduleBreakdown.length === 0 &&
+              <li className="px-5 py-4 text-[13px] text-ink-muted">No audit events recorded yet.</li>
+              }
+            </ul>
+          </Card>
+          }
           <div className="grid gap-6 lg:grid-cols-2">
             <ChartFrame title="Sessions this week" subtitle="All schools">
               <AreaChartBlock data={PLATFORM_ACTIVITY} xKey="day" areaKey="sessions" name="Sessions" />

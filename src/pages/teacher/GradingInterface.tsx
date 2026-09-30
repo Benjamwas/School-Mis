@@ -1,28 +1,55 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ChevronLeftIcon, ChevronRightIcon, FileTextIcon } from 'lucide-react';
 import { Avatar, Badge, Button, Card, CardHeader, Field, Input, PageHeader, Progress, StatusBadge, Textarea, cx } from '../../components/ui/primitives';
 import { ConfirmDialog } from '../../components/ui/feedback';
 import { ASSIGNMENTS, SUBMISSIONS } from '../../data/academics';
 import { useApp } from '../../contexts/AppContext';
+import { api } from '../../api/client';
+import { useApiLive, useList } from '../../api/hooks';
 
 export function GradingInterface() {
   const { id = 'a3' } = useParams();
   const assignment = ASSIGNMENTS.find((a) => a.id === id) ?? ASSIGNMENTS[2];
+  const live = useApiLive();
+  const submissionsRes = useList<Record<string, unknown>>(`/subjects/assignments/${id}/submissions/`);
   const [index, setIndex] = useState(0);
   const [score, setScore] = useState('16');
   const [feedback, setFeedback] = useState('Clear structure and good vocabulary. Watch your ngeli agreement in the second paragraph.');
   const [confirm, setConfirm] = useState<'return' | 'resubmit' | null>(null);
   const { toast } = useApp();
 
-  const student = SUBMISSIONS[index];
-  const graded = SUBMISSIONS.filter((s) => s.status === 'Graded').length;
+  const liveSubmissions = (submissionsRes.data ?? []).map((submission) => ({
+    id: String(submission.id),
+    student: String(submission.student_name ?? 'Learner'),
+    submitted: submission.submitted_at ? new Date(String(submission.submitted_at)).toLocaleDateString('en-GB') : 'Not submitted',
+    status: String(submission.status ?? 'NOT_STARTED').replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+    score: submission.marks == null ? null : Number(submission.marks),
+    content: String(submission.submission_content ?? '')
+  }));
+  const fallbackSubmissions = SUBMISSIONS.map((submission, submissionIndex) => ({ ...submission, id: `demo-${submissionIndex}` }));
+  const submissions = live ? liveSubmissions : fallbackSubmissions;
+  const student = submissions[index] ?? submissions[0] ?? SUBMISSIONS[0];
+  const graded = submissions.filter((s) => s.status === 'Graded').length;
 
-  const act = () => {
+  const act = async () => {
+    if (live && student.id) {
+      try {
+        if (confirm === 'return') {
+          await api.post(`/subjects/assignments/${id}/grade_student/`, { submission_id: student.id, marks: Number(score), feedback });
+        } else {
+          await api.post(`/subjects/assignments/${id}/request_resubmission/`, { submission_id: student.id });
+        }
+      } catch (error) {
+        toast({ tone: 'warning', title: 'Action failed', body: error instanceof Error ? error.message : 'Please try again.' });
+        setConfirm(null);
+        return;
+      }
+    }
     if (confirm === 'return') toast({ tone: 'success', title: 'Grade returned', body: `${student.student} and their parent can now see the feedback.` });else
     toast({ tone: 'pending', title: 'Resubmission requested', body: `${student.student} has been asked to submit again by Friday.` });
     setConfirm(null);
-    setIndex((i) => Math.min(SUBMISSIONS.length - 1, i + 1));
+    setIndex((i) => Math.min(submissions.length - 1, i + 1));
   };
 
   return (
@@ -40,16 +67,16 @@ export function GradingInterface() {
         subtitle={`${assignment.title} · ${assignment.className} · ${assignment.marks} marks`}
         actions={
         <span className="text-[13px] text-ink-muted">
-            {graded} of {SUBMISSIONS.length} graded
+            {graded} of {submissions.length} graded
           </span>
         } />
       
 
       <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
         <Card className="h-max">
-          <CardHeader title="Submissions" subtitle={`${SUBMISSIONS.length} learners`} />
+            <CardHeader title="Submissions" subtitle={`${submissions.length} learners`} />
           <ul className="divide-y divide-line max-h-[520px] overflow-y-auto sala-scroll">
-            {SUBMISSIONS.map((s, i) =>
+            {submissions.map((s, i) =>
             <li key={s.student}>
                 <button
                 onClick={() => setIndex(i)}
@@ -66,7 +93,7 @@ export function GradingInterface() {
             )}
           </ul>
           <div className="px-4 py-3 border-t border-line">
-            <Progress value={graded / SUBMISSIONS.length * 100} label="Grading progress" />
+          <Progress value={graded / Math.max(submissions.length, 1) * 100} label="Grading progress" />
           </div>
         </Card>
 
@@ -80,7 +107,7 @@ export function GradingInterface() {
                   <button onClick={() => setIndex((i) => Math.max(0, i - 1))} disabled={index === 0} aria-label="Previous learner" className="h-8 w-8 grid place-items-center rounded-md border border-line disabled:opacity-40 hover:bg-cream transition-colors duration-150">
                     <ChevronLeftIcon size={15} />
                   </button>
-                  <button onClick={() => setIndex((i) => Math.min(SUBMISSIONS.length - 1, i + 1))} disabled={index === SUBMISSIONS.length - 1} aria-label="Next learner" className="h-8 w-8 grid place-items-center rounded-md border border-line disabled:opacity-40 hover:bg-cream transition-colors duration-150">
+                  <button onClick={() => setIndex((i) => Math.min(submissions.length - 1, i + 1))} disabled={index === submissions.length - 1} aria-label="Next learner" className="h-8 w-8 grid place-items-center rounded-md border border-line disabled:opacity-40 hover:bg-cream transition-colors duration-150">
                     <ChevronRightIcon size={15} />
                   </button>
                 </span>
@@ -126,7 +153,7 @@ export function GradingInterface() {
                 <Button size="sm" variant="secondary" onClick={() => setConfirm('resubmit')}>
                   Request resubmission
                 </Button>
-                <Button size="sm" variant="ghost" onClick={() => setIndex((i) => Math.min(SUBMISSIONS.length - 1, i + 1))}>
+                <Button size="sm" variant="ghost" onClick={() => setIndex((i) => Math.min(submissions.length - 1, i + 1))}>
                   Skip for now
                 </Button>
               </div>

@@ -6,13 +6,80 @@ import { CLASS_ATTENDANCE_TREND, CLASS_SUBJECT_AVERAGES, TERM_TREND } from '../.
 import { COLLECTIONS_TREND, STUDENT_BALANCES, formatKES } from '../../data/finance';
 import { PIPELINE_COUNTS } from '../../data/crm';
 import { STAFF_LEAVE_QUEUE } from '../../data/hr';
+import { useApiLive, useObject } from '../../api/hooks';
+import type { ApiReportDef, ApiReportTable } from '../../api/types';
 
 const TABS = ['Academic', 'Attendance', 'Finance', 'Admissions', 'HR'];
+
+const REPORT_BY_TAB: Record<string, string> = {
+  Academic: 'performance',
+  Attendance: 'attendance_summary',
+  Finance: 'fee_balance',
+  Admissions: 'lead_pipeline',
+  HR: 'staff_roster'
+};
+
+const REPORT_TITLES: Record<string, string> = {
+  performance: 'Subject performance',
+  attendance_summary: 'Absence summary',
+  fee_balance: 'Fee balances',
+  lead_pipeline: 'Admissions pipeline',
+  staff_roster: 'Staff roster'
+};
+
+function LiveReportTable({ table, title, caption }: { table: ApiReportTable | null; title: string; caption: string }) {
+  const columns = (table?.columns ?? []).map((c, i) => ({
+    key: `c${i}`,
+    header: String(c),
+    align: 'right' as const
+  }));
+  const rows = (table?.rows ?? []).map((r) => {
+    const row: Record<string, string | number> = { key: r.join('|') };
+    columns.forEach((c, i) => { row[c.key] = r[i]; });
+    return row;
+  });
+  return (
+    <Card className="mb-6">
+      <CardHeader
+        title={title}
+        subtitle={table?.summary
+          ? Object.entries(table.summary).map(([k, v]) => `${k.replace(/_/g, ' ')}: ${v}`).join(' · ')
+          : undefined} />
+      <DataTable
+        columns={columns.map((c, i) => (i === 0
+          ? { key: c.key, header: c.header, render: (r: any) => <span className="font-medium">{String(r[c.key] ?? '')}</span> }
+          : c))}
+        rows={rows}
+        mobileTitle={(r: any) => String(r[columns[0]?.key] ?? '')}
+        caption={caption} />
+    </Card>
+  );
+}
 
 export function AdminReports() {
   const [tab, setTab] = useState(TABS[0]);
   const [term, setTerm] = useState('Term 3 · 2026');
   const [klass, setKlass] = useState('All classes');
+
+  const live = useApiLive();
+  const defs = useObject<ApiReportDef>('reports/');
+  const academicReport = useObject<ApiReportTable>(`reports/${REPORT_BY_TAB.Academic}/`);
+  const attendanceReport = useObject<ApiReportTable>(`reports/${REPORT_BY_TAB.Attendance}/`);
+  const financeReport = useObject<ApiReportTable>(`reports/${REPORT_BY_TAB.Finance}/`);
+  const admissionsReport = useObject<ApiReportTable>(`reports/${REPORT_BY_TAB.Admissions}/`);
+  const hrReport = useObject<ApiReportTable>(`reports/${REPORT_BY_TAB.HR}/`);
+
+  const reportFor = (key: string) => {
+    if (key === 'Academic') return academicReport;
+    if (key === 'Attendance') return attendanceReport;
+    if (key === 'Finance') return financeReport;
+    if (key === 'Admissions') return admissionsReport;
+    return hrReport;
+  };
+
+  const active = reportFor(tab);
+  const reportError = defs.error ?? active.error;
+  const available = defs.data?.reports ?? [];
 
   return (
     <div>
@@ -36,6 +103,20 @@ export function AdminReports() {
       <div className="mb-6">
         <Tabs tabs={TABS} active={tab} onChange={setTab} />
       </div>
+
+      {live && reportError &&
+      <p className="mb-4 text-sm text-rose-600">{reportError}</p>
+      }
+
+      {live &&
+      <LiveReportTable
+        table={active.data}
+        title={`${REPORT_TITLES[REPORT_BY_TAB[tab]]} — ${REPORT_BY_TAB[tab]}`}
+        caption={REPORT_TITLES[REPORT_BY_TAB[tab]]} />
+      }
+      {live && available.length > 0 &&
+      <p className="mb-6 text-[12.5px] text-ink-muted">{available.length} reports available on the backend.</p>
+      }
 
       {tab === 'Academic' &&
       <div className="space-y-6">
@@ -61,7 +142,7 @@ export function AdminReports() {
           <ChartFrame title="Attendance rate" subtitle="School-wide monthly">
             <BarChartBlock data={CLASS_ATTENDANCE_TREND} xKey="month" bars={[{ key: 'rate', name: 'Attendance %', color: '#1F5E43' }]} />
           </ChartFrame>
-          <Card>
+          <Card className={live ? 'hidden' : undefined}>
             <CardHeader title="Absence summary by class" subtitle={term} />
             <DataTable
             columns={[
@@ -94,7 +175,7 @@ export function AdminReports() {
             } />
           
           </ChartFrame>
-          <Card>
+          <Card className={live ? 'hidden' : undefined}>
             <CardHeader title="Outstanding balances" subtitle={term} />
             <DataTable
             columns={[
@@ -133,7 +214,7 @@ export function AdminReports() {
             <Stat label="Payroll (monthly)" value={formatKES(7840000)} sub="Gross" tone="gold" />
             <Stat label="Open tickets" value="2" sub="Average 1.4 days to close" />
           </div>
-          <Card>
+          <Card className={live ? 'hidden' : undefined}>
             <CardHeader title="Leave register" subtitle="Current requests" />
             <DataTable
             columns={[

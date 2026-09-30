@@ -32,6 +32,8 @@ interface AppState {
   setSchoolId: (id: string | null) => void;
   login: (email: string, password: string) => Promise<ApiUser>;
   logout: () => Promise<void>;
+  darkMode: boolean;
+  toggleDarkMode: () => void;
 }
 
 const Ctx = createContext<AppState | null>(null);
@@ -45,6 +47,27 @@ export function AppProvider({ children, initialRole = 'visitor' }: {children: Re
   const [sessionMode, setSessionMode] = useState<SessionMode>('demo');
   const [user, setUser] = useState<ApiUser | null>(null);
   const [schoolId, setSchoolIdState] = useState<string | null>(null);
+  const [darkMode, setDarkMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('darkMode');
+      if (saved !== null) return JSON.parse(saved);
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('darkMode', JSON.stringify(darkMode));
+  }, [darkMode]);
+
+  const toggleDarkMode = useCallback(() => {
+    setDarkMode((prev) => !prev);
+  }, []);
 
   useEffect(() => {
     let alive = true;
@@ -121,9 +144,9 @@ export function AppProvider({ children, initialRole = 'visitor' }: {children: Re
   const value = useMemo(
     () => ({
       role, setRole, activeChildId, setActiveChildId, toasts, toast, dismiss, searchOpen, setSearchOpen,
-      booted, sessionMode, user, schoolId, setSchoolId, login, logout,
+      booted, sessionMode, user, schoolId, setSchoolId, login, logout, darkMode, toggleDarkMode,
     }),
-    [role, activeChildId, toasts, toast, dismiss, searchOpen, booted, sessionMode, user, schoolId, setSchoolId, login, logout]
+    [role, activeChildId, toasts, toast, dismiss, searchOpen, booted, sessionMode, user, schoolId, setSchoolId, login, logout, darkMode, toggleDarkMode]
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

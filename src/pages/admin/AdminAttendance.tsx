@@ -5,8 +5,46 @@ import { AreaChartBlock, BarChartBlock, ChartFrame, DataTable } from '../../comp
 import { Alert } from '../../components/ui/feedback';
 import { CLASS_ATTENDANCE_TREND } from '../../data/academics';
 import { CLASSES } from '../../data/people';
+import { useApiLive, useList } from '../../api/hooks';
+import type { ApiAttendanceSession } from '../../api/types';
+
+const SESSION_STATUS: Record<string, string> = {
+  OPEN: 'Not submitted',
+  CLOSED: 'Submitted'
+};
+
+function sessionStatus(status?: string): string {
+  if (!status) return 'Not submitted';
+  return SESSION_STATUS[status] ?? status;
+}
+
+function fmtDate(value?: string | null): string {
+  if (!value) return '—';
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
 
 export function AdminAttendance() {
+  const live = useApiLive();
+  const sessions = useList<ApiAttendanceSession>('attendance/sessions/');
+
+  const rows: any[] = live
+    ? (sessions.data ?? []).map((s) => ({
+      id: s.id,
+      name: s.class_name || '—',
+      teacher: '—',
+      learners: 0,
+      present: 0,
+      absent: 0,
+      attendance: 0,
+      date: fmtDate(s.attendance_date),
+      status: sessionStatus(s.status)
+    }))
+    : CLASSES;
+
+  const latest = rows.length ? rows[0].date : '';
+
   return (
     <div>
       <PageHeader
@@ -40,7 +78,10 @@ export function AdminAttendance() {
       </div>
 
       <Card className="mt-6">
-        <CardHeader title="Class registers" subtitle="Friday 20 September 2026" />
+        <CardHeader title="Class registers" subtitle={live && latest ? latest : 'Friday 20 September 2026'} />
+        {live && sessions.error &&
+        <p className="px-5 pt-3 text-sm text-rose-600">{sessions.error}</p>
+        }
         <DataTable
           columns={[
           { key: 'name', header: 'Class', render: (r: any) => <span className="font-medium">{r.name}</span> },
@@ -49,7 +90,10 @@ export function AdminAttendance() {
           { key: 'present', header: 'Present', align: 'right', render: (r: any) => r.learners - 2 },
           { key: 'absent', header: 'Absent', align: 'right', render: () => 2 },
           { key: 'attendance', header: 'Rate', align: 'right', render: (r: any) => <Badge tone={r.attendance < 95 ? 'warning' : 'success'}>{r.attendance}%</Badge> },
-          { key: 'status', header: 'Register', render: (r: any) => <Badge tone={r.id === 'c4' ? 'pending' : 'success'}>{r.id === 'c4' ? 'Not submitted' : 'Submitted'}</Badge> }]
+          { key: 'status', header: 'Register', render: (r: any) => {
+              const label = r.status ?? (r.id === 'c4' ? 'Not submitted' : 'Submitted');
+              return <Badge tone={label === 'Not submitted' ? 'pending' : 'success'}>{label}</Badge>;
+            } }]
           }
           rows={CLASSES}
           mobileTitle={(r: any) => r.name}

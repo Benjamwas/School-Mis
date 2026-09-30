@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { BanknoteIcon, CheckCircle2Icon, DownloadIcon, Loader2Icon, PrinterIcon, SmartphoneIcon, WalletIcon } from 'lucide-react';
 import { Badge, Button, Card, CardHeader, Field, Input, PageHeader, Progress, Stat, cx } from '../../components/ui/primitives';
@@ -7,6 +7,8 @@ import { DataTable } from '../../components/ui/data';
 import { FEE_BREAKDOWN, FEE_SUMMARY, PAYMENTS, formatKES } from '../../data/finance';
 import { GUARDIANS, STUDENTS } from '../../data/people';
 import { useApp } from '../../contexts/AppContext';
+import { useApiLive, useList } from '../../api/hooks';
+import type { ApiInvoice, ApiPayment } from '../../api/types';
 
 type Stage = 'method' | 'details' | 'processing' | 'done';
 
@@ -18,6 +20,22 @@ export function ParentFees() {
   const [phone, setPhone] = useState('+254 722 481 903');
   const [receipt, setReceipt] = useState<null | {ref: string;no: string;}>(null);
   const { toast } = useApp();
+  const live = useApiLive();
+  const invoices = useList<ApiInvoice>('/finance/invoices/');
+  const payments = useList<ApiPayment>('/payments/');
+  const liveBalance = (invoices.data ?? []).reduce((sum, invoice) => sum + Number(invoice.balance || 0), 0);
+  const paymentRows = live
+    ? (payments.data ?? []).map((payment) => ({
+      id: payment.id,
+      date: payment.paid_at ? new Date(payment.paid_at).toLocaleDateString('en-GB') : '—',
+      amount: Number(payment.amount || 0),
+      method: payment.method,
+      reference: payment.transaction_ref,
+      student: payment.student_name,
+      term: 'Current term',
+      receiptNo: '—'
+    }))
+    : PAYMENTS;
 
   const start = () => {
     setStage('processing');
@@ -45,7 +63,7 @@ export function ParentFees() {
         } />
       
 
-      {FEE_SUMMARY.balance > 0 &&
+       {(live ? liveBalance : FEE_SUMMARY.balance) > 0 &&
       <div className="mb-6">
           <Alert tone="warning" title={`${formatKES(FEE_SUMMARY.balance)} is outstanding for Term 3`}>
             Payment is due by {FEE_SUMMARY.deadline}. Instalment arrangements can be made with the finance office on +254 726 118 990.
@@ -88,7 +106,7 @@ export function ParentFees() {
                 </Button>
               } />
             
-            <DataTable
+           <DataTable
               columns={[
               { key: 'date', header: 'Date' },
               { key: 'student', header: 'Student', hideOnMobile: true },
@@ -107,7 +125,7 @@ export function ParentFees() {
 
               }]
               }
-              rows={PAYMENTS}
+               rows={paymentRows}
               mobileTitle={(r: any) => `${formatKES(r.amount)} · ${r.date}`}
               caption="Payment history" />
             

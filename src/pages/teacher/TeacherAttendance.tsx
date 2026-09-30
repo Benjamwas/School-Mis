@@ -1,21 +1,47 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { CheckIcon, ClockIcon, SaveIcon, XIcon } from 'lucide-react';
-import { Avatar, Button, Card, CardHeader, PageHeader, Stat, cx } from '../../components/ui/primitives';
+import { Avatar, Button, Card, CardHeader, PageHeader, Stat, StatusBadge, cx } from '../../components/ui/primitives';
 import { Alert } from '../../components/ui/feedback';
 import { BarChartBlock, ChartFrame } from '../../components/ui/data';
 import { CLASS_ATTENDANCE_TREND } from '../../data/academics';
 import { STUDENTS } from '../../data/people';
 import { useApp } from '../../contexts/AppContext';
+import { useApiLive, useList } from '../../api/hooks';
+import type { ApiAttendanceSession } from '../../api/types';
 
 type Mark = 'present' | 'absent' | 'late';
 
+function titleCase(value: string): string {
+  if (!value) return '—';
+  return value.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function dayMonth(value: string): string {
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' });
+}
+
 export function TeacherAttendance() {
+  const live = useApiLive();
+  const sessions = useList<ApiAttendanceSession>('/attendance/sessions/');
   const learners = STUDENTS.filter((s) => s.className === 'Grade 4');
   const [marks, setMarks] = useState<Record<string, Mark>>(() =>
   Object.fromEntries(learners.map((s, i) => [s.id, i === 4 ? 'absent' : i === 6 ? 'late' : 'present'])) as Record<string, Mark>
   );
   const [saved, setSaved] = useState(false);
   const { toast } = useApp();
+
+  const liveSessions = useMemo(() => {
+    if (!sessions.data) return null;
+    return sessions.data.map((s) => ({
+      id: s.id,
+      date: dayMonth(s.attendance_date),
+      className: s.class_name,
+      remarks: s.remarks || '—',
+      status: titleCase(s.status)
+    }));
+  }, [sessions.data]);
 
   const counts = {
     present: Object.values(marks).filter((m) => m === 'present').length,
@@ -45,6 +71,10 @@ export function TeacherAttendance() {
           </Button>
         } />
       
+
+      {live && sessions.error &&
+      <p className="text-sm text-rose-600">{sessions.error}</p>
+      }
 
       {saved &&
       <div className="mb-6">
@@ -101,6 +131,28 @@ export function TeacherAttendance() {
         </Card>
 
         <div className="space-y-6">
+          {liveSessions &&
+          <Card>
+            <CardHeader title="Recorded registers" subtitle={`${liveSessions.length} sessions from the API`} />
+            <ul className="divide-y divide-line">
+              {liveSessions.slice(0, 8).map((s) =>
+              <li key={s.id} className="px-5 py-3 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-[13.5px] font-medium text-ink truncate">{s.className}</p>
+                  <p className="text-[12.5px] text-ink-muted truncate">
+                    {s.date} · {s.remarks}
+                  </p>
+                </div>
+                <StatusBadge status={s.status} />
+              </li>
+              )}
+              {liveSessions.length === 0 &&
+              <li className="px-5 py-4 text-[13px] text-ink-muted">No registers recorded yet.</li>
+              }
+            </ul>
+          </Card>
+          }
+
           <ChartFrame title="Attendance trend" subtitle="Monthly rate — Grade 4 Acacia">
             <BarChartBlock data={CLASS_ATTENDANCE_TREND} xKey="month" bars={[{ key: 'rate', name: 'Attendance %', color: '#1F5E43' }]} />
           </ChartFrame>

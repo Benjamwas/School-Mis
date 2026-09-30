@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { BellIcon, CheckIcon, ChevronDownIcon, SearchIcon, UserCogIcon } from 'lucide-react';
@@ -6,9 +6,51 @@ import { Badge, Button, cx } from '../ui/primitives';
 import { Modal } from '../ui/feedback';
 import { NOTIFICATIONS, ROLE_HOME, ROLE_LABELS, ROLE_USERS } from '../../data/navigation';
 import { useApp } from '../../contexts/AppContext';
+import { api } from '../../api/client';
+import { useApiLive, useList, useObject } from '../../api/hooks';
+import type { ApiNotification, ApiSearchResult } from '../../api/types';
 import type { Role } from '../../types';
 
 const DEMO_ROLES: Role[] = ['superadmin', 'admin', 'finance', 'hr', 'classteacher', 'subjectteacher', 'parent', 'student', 'visitor'];
+
+function titleCase(value: string): string {
+  if (!value) return '—';
+  return value.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+const NOTIFICATION_TONE: Record<string, string> = {
+  success: 'success',
+  info: 'info',
+  warning: 'warning',
+  pending: 'pending',
+  error: 'error',
+  assignment: 'pending',
+  submission: 'info',
+  attendance: 'warning',
+  leave: 'info',
+  fee: 'success',
+  result: 'info'
+};
+
+function notificationTone(type?: string): string {
+  if (!type) return 'info';
+  return NOTIFICATION_TONE[type.toLowerCase()] ?? 'info';
+}
+
+function relativeWhen(value?: string): string {
+  if (!value) return '—';
+  const then = new Date(value);
+  if (Number.isNaN(then.getTime())) return '—';
+  const minutes = Math.round((Date.now() - then.getTime()) / 60000);
+  if (minutes < 1) return 'Just now';
+  if (minutes < 60) return `${minutes} min ago`;
+  if (minutes < 60 * 24) {
+    const hours = Math.round(minutes / 60);
+    return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+  }
+  if (minutes < 60 * 48) return 'Yesterday';
+  return then.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+}
 
 export function notificationKey(role: Role) {
   if (role === 'classteacher' || role === 'subjectteacher') return 'teacher';
@@ -84,9 +126,28 @@ export function RoleSwitcher({ compact }: {compact?: boolean;}) {
 
 export function NotificationBell() {
   const { role } = useApp();
+  const live = useApiLive();
   const [open, setOpen] = useState(false);
-  const items = NOTIFICATIONS[notificationKey(role)] ?? [];
-  const unread = items.filter((i) => i.unread).length;
+  const unreadCount = useObject<{ count?: number }>('/notifications/unread_count/');
+  const notifications = useList<ApiNotification>('/notifications/');
+  const mockItems = NOTIFICATIONS[notificationKey(role)] ?? [];
+
+  const liveItems = React.useMemo(() => {
+    if (!notifications.data) return null;
+    return notifications.data.map((n) => ({
+      title: n.title,
+      body: n.body ?? '',
+      when: relativeWhen(n.created_at),
+      tone: notificationTone(n.type),
+      unread: !n.is_read
+    }));
+  }, [notifications.data]);
+
+  const items = live ? liveItems ?? [] : mockItems;
+  const unread = live
+    ? unreadCount.data?.count ?? items.filter((i) => i.unread).length
+    : items.filter((i) => i.unread).length;
+  const error = live ? unreadCount.error ?? notifications.error : null;
   const toneCls: Record<string, string> = {
     success: 'bg-forest-500',
     info: 'bg-sky-500',
@@ -124,10 +185,16 @@ export function NotificationBell() {
                 <p className="text-sm font-semibold text-ink">Notifications</p>
                 <Badge tone="neutral">{unread} unread</Badge>
               </div>
+              {error &&
+              <p className="px-4 pt-3 text-sm text-rose-600">{error}</p>
+              }
+              {live && !error && items.length === 0 &&
+              <p className="px-4 py-6 text-center text-sm text-ink-muted">You have no notifications.</p>
+              }
               <ul className="max-h-80 overflow-y-auto sala-scroll divide-y divide-line">
                 {items.map((n, i) =>
               <li key={i} className={cx('px-4 py-3 flex gap-3', n.unread && 'bg-forest-50/40')}>
-                    <span className={cx('mt-1.5 h-2 w-2 rounded-full shrink-0', toneCls[n.tone])} aria-hidden="true" />
+                    <span className={cx('mt-1.5 h-2 w-2 rounded-full shrink-0', toneCls[n.tone] ?? toneCls.info)} aria-hidden="true" />
                     <div className="min-w-0">
                       <p className="text-[13.5px] font-medium text-ink">{n.title}</p>
                       <p className="text-[12.5px] text-ink-muted leading-relaxed">{n.body}</p>
@@ -169,15 +236,96 @@ const SEARCH_RESULTS = [
 }];
 
 
+interface SearchGroup {
+  group: string;
+  items: { title: string; meta: string; to: string }[];
+}
+
+const SEARCH_CATEGORIES: { key: string; label: string; to: (id: string) => string }[] = [
+  { key: 'students', label: 'Students', to: (id) => `/admin/student/${id}` },
+  { key: 'parents', label: 'Parents', to: () => '/admin/parents' },
+  { key: 'staff', label: 'Staff', to: () => '/admin/teachers' },
+  { key: 'invoices', label: 'Invoices', to: () => '/finance/payments' },
+  { key: 'leads', label: 'Leads', to: () => '/admin/crm' },
+  { key: 'applications', label: 'Applications', to: () => '/admin/admissions' },
+  { key: 'announcements', label: 'Announcements', to: () => '/admin/communication' },
+  { key: 'events', label: 'Events', to: () => '/admin/content/Events' },
+  { key: 'cms_pages', label: 'Pages', to: () => '/admin/content' }
+];
+
+function asText(value: unknown): string {
+  if (value === null || value === undefined || value === '') return '';
+  return String(value);
+}
+
+function searchRow(key: string, row: ApiSearchResult): { title: string; meta: string; to: string } {
+  const status = asText(row.status);
+  const name = asText(row.name);
+  const admission = asText(row.admission_number);
+  const extra = [asText(row.email), asText(row.employee_number), asText(row.department),
+    asText(row.invoice_number), asText(row.student), asText(row.number), asText(row.applicant),
+    asText(row.slug), admission]
+    .filter(Boolean)
+    .filter((v) => v !== name)
+    .join(' · ');
+  const meta = [extra, status ? titleCase(status) : ''].filter(Boolean).join(' · ') || '—';
+  const title = name || asText(row.title) || asText(row.invoice_number) || asText(row.number) || asText(row.slug) || 'Untitled';
+  const route = SEARCH_CATEGORIES.find((c) => c.key === key)?.to ?? (() => '/');
+  return { title, meta, to: route(row.id) };
+}
+
+function adaptSearch(payload: Record<string, ApiSearchResult[]> | null): SearchGroup[] {
+  if (!payload) return [];
+  return SEARCH_CATEGORIES.map((c) => {
+    const rows = Array.isArray(payload[c.key]) ? payload[c.key] : [];
+    return { group: c.label, items: rows.map((r) => searchRow(c.key, r)) };
+  }).filter((g) => g.items.length);
+}
+
+
 export function GlobalSearch() {
   const { searchOpen, setSearchOpen } = useApp();
   const navigate = useNavigate();
+  const live = useApiLive();
   const [q, setQ] = useState('');
+  const [liveGroups, setLiveGroups] = useState<SearchGroup[] | null>(null);
+  const [searchError, setSearchError] = useState<string | null>(null);
 
-  const groups = SEARCH_RESULTS.map((g) => ({
+  const term = q.trim();
+
+  useEffect(() => {
+    if (!live || term.length < 2) {
+      setLiveGroups(null);
+      setSearchError(null);
+      return;
+    }
+    let alive = true;
+    const timer = setTimeout(() => {
+      api.get<Record<string, ApiSearchResult[]>>(`/search/?q=${encodeURIComponent(term)}`)
+        .then((data) => {
+          if (!alive) return;
+          setLiveGroups(adaptSearch(data));
+          setSearchError(null);
+        })
+        .catch((err) => {
+          if (!alive) return;
+          setLiveGroups(null);
+          setSearchError(err instanceof Error ? err.message : 'Search failed.');
+        });
+    }, 300);
+    return () => {
+      alive = false;
+      clearTimeout(timer);
+    };
+  }, [live, term]);
+
+  const mockGroups = React.useMemo(() => SEARCH_RESULTS.map((g) => ({
     ...g,
     items: g.items.filter((i) => q ? i.title.toLowerCase().includes(q.toLowerCase()) : true)
-  })).filter((g) => g.items.length);
+  })).filter((g) => g.items.length), [q]);
+
+  const groups: SearchGroup[] = live ? liveGroups ?? [] : mockGroups;
+  const error = live ? searchError : null;
 
   return (
     <Modal open={searchOpen} onClose={() => setSearchOpen(false)} title="Search SALA" description="Results are limited to what your role is permitted to see." size="md">
@@ -192,7 +340,13 @@ export function GlobalSearch() {
           className="w-full h-11 rounded-lg border border-line pl-9 pr-3 text-sm focus:border-forest-500 focus:ring-2 focus:ring-forest-100 outline-none" />
         
       </div>
-      {groups.length === 0 ?
+      {error &&
+      <p className="text-sm text-rose-600 mb-3">{error}</p>
+      }
+      {!error && live && liveGroups === null && term.length >= 2 &&
+      <p className="text-sm text-ink-muted py-6 text-center">Searching…</p>
+      }
+      {!error && groups.length === 0 ?
       <p className="text-sm text-ink-muted py-6 text-center">No matches for “{q}”. Try a name, receipt number or class.</p> :
 
       <div className="space-y-4">
@@ -201,7 +355,7 @@ export function GlobalSearch() {
               <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-soft mb-1.5">{g.group}</p>
               <ul className="space-y-1">
                 {g.items.map((i) =>
-            <li key={i.title}>
+            <li key={i.title + i.meta}>
                     <button
                 onClick={() => {
                   setSearchOpen(false);

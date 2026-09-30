@@ -1,14 +1,20 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRightIcon } from 'lucide-react';
 import { Avatar, Button, Card, PageHeader, Progress, StatusBadge } from '../../components/ui/primitives';
 import { ATTENDANCE_SUMMARY, SUBJECT_SCORES } from '../../data/academics';
 import { FEE_SUMMARY, formatKES } from '../../data/finance';
 import { GUARDIANS, STUDENTS, TEACHERS } from '../../data/people';
+import { useApiLive, useList, useObject } from '../../api/hooks';
 
 export function ParentChildren() {
-  const parent = GUARDIANS[0];
-  const children = STUDENTS.filter((s) => parent.childIds.includes(s.id));
+  const live = useApiLive();
+  const parentProfile = useObject<{ id: string }>('/parents/me');
+  const liveChildren = useList<{ student: string; child: { id: string; full_name: string; admission_number: string; current_class_name?: string; status: string } }>(parentProfile.data?.id ? `/parents/${parentProfile.data.id}/children/` : '/parents/me/children/');
+  const demoParent = GUARDIANS[0];
+  const children = STUDENTS.filter((s) => demoParent.childIds.includes(s.id));
+  const displayedChildren = live
+    ? (liveChildren.data ?? []).map((relation) => ({ id: relation.student, name: relation.child.full_name, className: relation.child.current_class_name ?? 'Current class', stream: '', admissionNo: relation.child.admission_number, status: relation.child.status, avatarInitials: relation.child.full_name.split(' ').map((part) => part[0]).join('').slice(0, 2) }))
+    : children;
   const average = Math.round(SUBJECT_SCORES.reduce((a, s) => a + s.score, 0) / SUBJECT_SCORES.length);
 
   return (
@@ -16,7 +22,7 @@ export function ParentChildren() {
       <PageHeader title="My children" subtitle="Everything about your children at SALA, in one place. You can only see learners linked to your account." />
 
       <div className="grid gap-5 lg:grid-cols-2">
-        {children.map((c, i) => {
+        {displayedChildren.map((c, i) => {
           const avg = i === 0 ? average : 81;
           const attendance = i === 0 ? ATTENDANCE_SUMMARY.percentage : 99;
           return (

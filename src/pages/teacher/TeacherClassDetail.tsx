@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { MessageSquareIcon, PlusIcon } from 'lucide-react';
 import { Avatar, Badge, Button, Card, CardHeader, PageHeader, Progress, StatusBadge } from '../../components/ui/primitives';
@@ -7,18 +7,69 @@ import { Alert } from '../../components/ui/feedback';
 import { ASSIGNMENTS, CLASS_ATTENDANCE_TREND, CLASS_SUBJECT_AVERAGES, GROUPS } from '../../data/academics';
 import { CLASSES, STUDENTS } from '../../data/people';
 import { useApp } from '../../contexts/AppContext';
+import { useApiLive, useDetail, useList } from '../../api/hooks';
+import type { ApiClass, ApiStudent } from '../../api/types';
 
 const CLASS_TEACHER_TABS = ['Overview', 'Students', 'Attendance', 'Performance', 'Assignments', 'Groups', 'Parent communication'];
 const SUBJECT_TEACHER_TABS = ['Overview', 'Students', 'Performance', 'Assignments', 'Groups'];
 
+function titleCase(value: string): string {
+  if (!value) return '—';
+  return value.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function initialsOf(name: string): string {
+  return name
+    .split(' ')
+    .filter(Boolean)
+    .slice(-2)
+    .map((x) => x[0]?.toUpperCase() ?? '')
+    .join('');
+}
+
 export function TeacherClassDetail() {
   const { id = 'c1' } = useParams();
   const { role } = useApp();
+  const live = useApiLive();
+  const klassRes = useDetail<ApiClass>('/schools/classes/', id);
+  const roster = useList<ApiStudent>(`/schools/classes/${id}/students/`);
   const isClassTeacher = role === 'classteacher';
   const tabs = isClassTeacher ? CLASS_TEACHER_TABS : SUBJECT_TEACHER_TABS;
   const [tab, setTab] = useState(tabs[0]);
   const klass = CLASSES.find((c) => c.id === id) ?? CLASSES[0];
-  const learners = STUDENTS.filter((s) => s.className === 'Grade 4');
+  const mockLearners = STUDENTS.filter((s) => s.className === 'Grade 4');
+
+  const error = klassRes.error ?? roster.error;
+
+  const liveKlass = useMemo(() => {
+    if (!klassRes.data) return null;
+    return {
+      name: klassRes.data.display_name || klassRes.data.name,
+      learners: '—',
+      room: klassRes.data.section || '—',
+      average: 0,
+      attendance: 0
+    };
+  }, [klassRes.data]);
+
+  const liveLearners = useMemo(() => {
+    if (!roster.data) return null;
+    return roster.data.map((s) => ({
+      id: s.id,
+      name: s.full_name,
+      admissionNo: s.admission_number,
+      className: s.current_class_name ?? '—',
+      stream: '',
+      age: 0,
+      gender: s.gender ?? '—',
+      avatarInitials: initialsOf(s.full_name),
+      parentId: '',
+      status: titleCase(s.status)
+    }));
+  }, [roster.data]);
+
+  const head = liveKlass ?? klass;
+  const learners = liveLearners ?? mockLearners;
 
   return (
     <div>
@@ -27,12 +78,12 @@ export function TeacherClassDetail() {
           {isClassTeacher ? 'My class' : 'My classes'}
         </Link>
         <span className="mx-1.5">/</span>
-        <span className="text-ink">{klass.name}</span>
+        <span className="text-ink">{head.name}</span>
       </nav>
 
       <PageHeader
-        title={klass.name}
-        subtitle={`${klass.learners} learners · ${klass.room} · average ${klass.average}% · attendance ${klass.attendance}%`}
+        title={head.name}
+        subtitle={`${head.learners} learners · ${head.room} · average ${head.average}% · attendance ${head.attendance}%`}
         actions={
         <>
             <Link to="/teacher/assignments/new">
@@ -50,6 +101,10 @@ export function TeacherClassDetail() {
           </>
         } />
       
+
+      {live && error &&
+      <p className="text-sm text-rose-600">{error}</p>
+      }
 
       <div className="mb-6">
         <Tabs tabs={tabs} active={tab} onChange={setTab} />

@@ -4,12 +4,55 @@ import { PlusIcon } from 'lucide-react';
 import { Badge, Button, Card, CardHeader, PageHeader, StatusBadge } from '../../components/ui/primitives';
 import { DataTable, Tabs } from '../../components/ui/data';
 import { EVENTS, GALLERY, IMAGES, NEWS } from '../../data/school';
+import { useApiLive, useList } from '../../api/hooks';
+import type { ApiEvent } from '../../api/types';
 
 const TABS = ['Events', 'Gallery', 'News'];
+
+const EVENT_STATUS: Record<string, string> = {
+  DRAFT: 'Planning',
+  PUBLISHED: 'Scheduled',
+  CANCELLED: 'Cancelled',
+  COMPLETED: 'Completed'
+};
+
+function eventStatus(status?: string): string {
+  if (!status) return 'Planning';
+  return EVENT_STATUS[status] ?? status;
+}
+
+function fmtDate(value?: string | null): string {
+  if (!value) return '—';
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function fmtTime(value?: string | null): string {
+  if (!value) return '—';
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return '—';
+  return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+}
 
 export function AdminContent() {
   const { tab = 'Events' } = useParams();
   const navigate = useNavigate();
+
+  const live = useApiLive();
+  const events = useList<ApiEvent>('events/');
+
+  const eventRows: any[] = live
+    ? (events.data ?? []).map((e) => ({
+      id: e.id,
+      title: e.title,
+      type: e.event_type || 'School Event',
+      date: fmtDate(e.start_time),
+      time: e.end_time ? `${fmtTime(e.start_time)} – ${fmtTime(e.end_time)}` : fmtTime(e.start_time),
+      location: e.venue || '—',
+      status: eventStatus(e.status)
+    }))
+    : EVENTS;
 
   return (
     <div>
@@ -30,6 +73,9 @@ export function AdminContent() {
       {tab === 'Events' &&
       <Card>
           <CardHeader title="School events" subtitle="Term 3 · 2026" />
+          {live && events.error &&
+          <p className="px-5 pt-3 text-sm text-rose-600">{events.error}</p>
+          }
           <DataTable
           columns={[
           { key: 'title', header: 'Event', render: (r: any) => <span className="font-medium">{r.title}</span> },
@@ -49,7 +95,7 @@ export function AdminContent() {
 
           }]
           }
-          rows={EVENTS}
+          rows={eventRows}
           mobileTitle={(r: any) => r.title}
           caption="School events" />
         

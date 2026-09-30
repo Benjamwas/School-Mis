@@ -4,15 +4,29 @@ import { CheckCircle2Icon, CircleIcon, FileTextIcon, PlayIcon } from 'lucide-rea
 import { Badge, Button, Card, CardHeader, PageHeader, Progress, cx } from '../../components/ui/primitives';
 import { LESSON } from '../../data/academics';
 import { useApp } from '../../contexts/AppContext';
+import { api } from '../../api/client';
+import { useApiLive, useList } from '../../api/hooks';
 
 export function StudentLesson() {
   const [done, setDone] = useState<string[]>(LESSON.steps.filter((s) => s.done).map((s) => s.title));
   const { toast } = useApp();
+  const live = useApiLive();
+  const progressRes = useList<Record<string, unknown>>('/lms/progress/');
+  const topicProgress = progressRes.data?.find((item) => String(item.topic_name ?? '').toLowerCase() === LESSON.topic.toLowerCase());
   const progress = Math.round(done.length / LESSON.steps.length * 100);
 
-  const complete = (title: string) => {
+  const complete = async (title: string) => {
     if (done.includes(title)) return;
-    setDone((d) => [...d, title]);
+    const nextDone = [...done, title];
+    if (live && topicProgress?.id) {
+      try {
+        await api.post(`/lms/progress/${topicProgress.id}/update_progress/`, { progress_percentage: Math.round(nextDone.length / LESSON.steps.length * 100) });
+      } catch (error) {
+        toast({ tone: 'warning', title: 'Progress was not saved', body: error instanceof Error ? error.message : 'Please try again.' });
+        return;
+      }
+    }
+    setDone(nextDone);
     toast({ tone: 'success', title: 'Step complete', body: `${title} marked as done.` });
   };
 

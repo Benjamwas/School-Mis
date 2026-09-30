@@ -4,14 +4,32 @@ import { ArrowRightIcon, FlameIcon, PlayCircleIcon, SparklesIcon, TrophyIcon } f
 import { Badge, Button, Card, CardHeader, PageHeader, Progress, StatusBadge } from '../../components/ui/primitives';
 import { Icon } from '../../components/ui/icons';
 import { ACHIEVEMENTS, ASSIGNMENTS, LESSON, SUBJECT_SCORES, SUBJECT_TOPICS } from '../../data/academics';
+import { useApiLive, useDashboard } from '../../api/hooks';
+import type { DashboardStudent } from '../../api/types';
 
 export function StudentDashboard() {
-  const due = ASSIGNMENTS.filter((a) => ['Not Started', 'In Progress', 'Late'].includes(a.status));
+  const live = useApiLive();
+  const dashboard = useDashboard<DashboardStudent>('student');
+  const due = live
+    ? (dashboard.data?.assignments ?? []).map((assignment) => ({
+      id: assignment.id,
+      title: assignment.title,
+      subject: assignment.subject,
+      topic: assignment.topic ?? 'Current topic',
+      teacher: 'Your teacher',
+      due: assignment.due_date ?? 'No due date',
+      marks: assignment.max_marks ?? 0,
+      status: assignment.status === 'PUBLISHED' ? 'Not Started' : assignment.status,
+      score: null,
+      feedback: null
+    }))
+    : ASSIGNMENTS.filter((a) => ['Not Started', 'In Progress', 'Late'].includes(a.status));
   const earned = ACHIEVEMENTS.filter((a) => a.earned);
+  const studentName = dashboard.data?.student?.name?.split(' ')[0] ?? 'Wanjiru';
 
   return (
     <div>
-      <PageHeader title="Habari, Wanjiru! 👋" subtitle="Grade 4 Acacia · Friday 20 September. You have 3 things to finish this week." />
+      <PageHeader title={`Habari, ${studentName}! 👋`} subtitle={`Grade 4 Acacia · Friday 20 September. You have ${due.length} things to finish this week.`} />
 
       {/* Continue learning */}
       <Card className="overflow-hidden bg-forest-800 border-forest-800 text-white">

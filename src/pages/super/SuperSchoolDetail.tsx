@@ -1,14 +1,55 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Badge, Button, Card, CardHeader, PageHeader, Progress, Stat, StatusBadge } from '../../components/ui/primitives';
 import { DataTable } from '../../components/ui/data';
 import { AUDIT_LOGS, MODULES, PLATFORM_USERS, SCHOOLS } from '../../data/platform';
 import { useApp } from '../../contexts/AppContext';
+import { useApiLive, useDetail, useList } from '../../api/hooks';
+import type { ApiSchool, ApiSchoolModule } from '../../api/types';
+
+function titleCase(value: string): string {
+  if (!value) return '—';
+  return value.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
 export function SuperSchoolDetail() {
   const { id = 'sc1' } = useParams();
+  const live = useApiLive();
+  const schoolRes = useDetail<ApiSchool>('/schools/schools/', id);
+  const schoolModules = useList<ApiSchoolModule>('/schools/school-modules/');
   const school = SCHOOLS.find((s) => s.id === id) ?? SCHOOLS[0];
   const { toast } = useApp();
+
+  const liveSchool = useMemo(() => {
+    if (!schoolRes.data) return null;
+    return {
+      name: schoolRes.data.name,
+      county: schoolRes.data.slug ?? '—',
+      learners: '—' as const,
+      staff: '—' as const,
+      admins: '—' as const,
+      plan: (schoolRes.data.code || '—').toUpperCase(),
+      since: '—' as const,
+      status: titleCase(schoolRes.data.status)
+    };
+  }, [schoolRes.data]);
+
+  const liveModules = useMemo(() => {
+    if (!schoolModules.data) return null;
+    return schoolModules.data
+      .filter((m) => m.school === id)
+      .map((m) => ({
+        name: m.module_name,
+        enabled: m.enabled,
+        usage: m.enabled ? 100 : 0,
+        config: m.module_code
+      }));
+  }, [schoolModules.data, id]);
+
+  const head = liveSchool ?? school;
+  const modules = liveModules ?? MODULES;
+  const enabledCount = liveModules ? liveModules.filter((m) => m.enabled).length : school.modules;
+  const error = schoolRes.error ?? schoolModules.error;
 
   return (
     <div>
@@ -17,12 +58,12 @@ export function SuperSchoolDetail() {
           Schools
         </Link>
         <span className="mx-1.5">/</span>
-        <span className="text-ink">{school.name}</span>
+        <span className="text-ink">{head.name}</span>
       </nav>
 
       <PageHeader
-        title={school.name}
-        subtitle={`${school.county} · ${school.plan} plan · on the platform since ${school.since}`}
+        title={head.name}
+        subtitle={`${head.county} · ${head.plan} plan · on the platform since ${head.since}`}
         actions={
         <>
             <Link to="/super/modules">
@@ -30,18 +71,22 @@ export function SuperSchoolDetail() {
                 Manage modules
               </Button>
             </Link>
-            <Button size="sm" variant="ghost" onClick={() => toast({ tone: 'warning', title: 'School suspended', body: `${school.name} portal access has been disabled.` })}>
+            <Button size="sm" variant="ghost" onClick={() => toast({ tone: 'warning', title: 'School suspended', body: `${head.name} portal access has been disabled.` })}>
               Suspend school
             </Button>
           </>
         } />
       
 
+      {live && error &&
+      <p className="text-sm text-rose-600">{error}</p>
+      }
+
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Stat label="Learners" value={school.learners.toLocaleString()} sub="Enrolled" tone="primary" />
-        <Stat label="Staff" value={school.staff} sub="Teaching and support" />
-        <Stat label="Administrators" value={school.admins} sub="With portal access" />
-        <Stat label="Modules enabled" value={`${school.modules} of 14`} sub={school.plan} tone="gold" />
+        <Stat label="Learners" value={head.learners} sub="Enrolled" tone="primary" />
+        <Stat label="Staff" value={head.staff} sub="Teaching and support" />
+        <Stat label="Administrators" value={head.admins} sub="With portal access" />
+        <Stat label="Modules enabled" value={`${enabledCount} of 14`} sub={head.plan} tone="gold" />
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
@@ -49,7 +94,7 @@ export function SuperSchoolDetail() {
           <Card>
             <CardHeader title="Enabled modules" subtitle="Toggled per school by the platform team" />
             <ul className="divide-y divide-line max-h-96 overflow-y-auto sala-scroll">
-              {MODULES.map((m) =>
+              {modules.map((m) =>
               <li key={m.name} className="px-5 py-3 flex items-center gap-4">
                   <div className="min-w-0 flex-1">
                     <p className="text-[14px] font-medium text-ink">{m.name}</p>
@@ -85,10 +130,10 @@ export function SuperSchoolDetail() {
             <CardHeader title="School profile" />
             <dl className="divide-y divide-line">
               {[
-              ['Status', school.status],
-              ['Plan', school.plan],
-              ['County', school.county],
-              ['Onboarded', school.since],
+              ['Status', head.status],
+              ['Plan', head.plan],
+              ['County', head.county],
+              ['Onboarded', head.since],
               ['Primary domain', 'salaschools.ac.ke'],
               ['Billing contact', 'p.njoroge@salaschools.ac.ke']].
               map(([k, v]) =>

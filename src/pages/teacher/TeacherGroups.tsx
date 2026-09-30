@@ -1,15 +1,59 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { PlusIcon, UsersRoundIcon } from 'lucide-react';
-import { Avatar, Badge, Button, Card, CardHeader, Checkbox, Field, Input, PageHeader, Progress, Select, Textarea } from '../../components/ui/primitives';
+import { Avatar, Badge, Button, Card, Checkbox, Field, Input, PageHeader, Progress, Select, Textarea } from '../../components/ui/primitives';
 import { Modal } from '../../components/ui/feedback';
 import { GROUPS } from '../../data/academics';
 import { STUDENTS } from '../../data/people';
 import { useApp } from '../../contexts/AppContext';
+import { api } from '../../api/client';
+import { useApiLive, useList } from '../../api/hooks';
 
 export function TeacherGroups() {
   const [open, setOpen] = useState(false);
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [selected, setSelected] = useState<string[]>([]);
+  const [saving, setSaving] = useState(false);
   const { toast } = useApp();
-  const learners = STUDENTS.filter((s) => s.className === 'Grade 4');
+  const live = useApiLive();
+  const groupsRes = useList<Record<string, unknown>>('/subjects/groups/');
+  const assignmentsRes = useList<Record<string, unknown>>('/subjects/teaching-assignments/');
+  const studentsRes = useList<Record<string, unknown>>('/students/');
+  const learners = live
+    ? (studentsRes.data ?? []).map((student) => ({ id: String(student.id), name: String(student.full_name ?? 'Learner'), className: String(student.current_class_name ?? 'Class'), avatarInitials: String(student.full_name ?? 'L').split(' ').map((part) => part[0]).join('').slice(0, 2) }))
+    : STUDENTS.filter((s) => s.className === 'Grade 4');
+  const groups = live
+    ? (groupsRes.data ?? []).map((group) => ({ id: String(group.id), name: String(group.name), subject: String(group.subject_name ?? 'General'), members: Number(group.member_count ?? 0), task: String(group.description ?? ''), progress: 0, leader: 'Teacher-led' }))
+    : GROUPS;
+
+  const createGroup = async () => {
+    if (!live) {
+      setOpen(false);
+      toast({ tone: 'success', title: 'Group created' });
+      return;
+    }
+    const assignment = assignmentsRes.data?.[0];
+    if (!name.trim() || !assignment?.school_class) {
+      toast({ tone: 'warning', title: 'Group details required', body: 'Enter a name and ensure you have a teaching assignment.' });
+      return;
+    }
+    setSaving(true);
+    try {
+      const group = await api.post<Record<string, unknown>>('/subjects/groups/', {
+        name: name.trim(), description: description.trim(), school_class: assignment.school_class, subject: assignment.subject
+      });
+      await Promise.all(selected.map((studentId) => api.post(`/subjects/groups/${group.id}/add-member/`, { student_id: studentId })));
+      setOpen(false);
+      setName('');
+      setDescription('');
+      setSelected([]);
+      window.location.reload();
+    } catch (error) {
+      toast({ tone: 'warning', title: 'Group could not be created', body: error instanceof Error ? error.message : 'Please try again.' });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div>
@@ -24,7 +68,7 @@ export function TeacherGroups() {
       
 
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-        {GROUPS.map((g) =>
+         {groups.map((g) =>
         <Card key={g.id} className="p-5">
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -93,10 +137,8 @@ export function TeacherGroups() {
             </Button>
             <Button
             size="sm"
-            onClick={() => {
-              setOpen(false);
-              toast({ tone: 'success', title: 'Group created', body: 'Multiplication Club · 5 learners added.' });
-            }}>
+             onClick={() => void createGroup()}
+             disabled={saving}>
             
               Create group
             </Button>
@@ -105,7 +147,7 @@ export function TeacherGroups() {
         
         <div className="grid sm:grid-cols-2 gap-5">
           <Field label="Group name" required className="sm:col-span-2">
-            <Input placeholder="e.g. Multiplication Club" />
+             <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Multiplication Club" />
           </Field>
           <Field label="Subject" required>
             <Select defaultValue="Mathematics">
@@ -122,15 +164,15 @@ export function TeacherGroups() {
             </Select>
           </Field>
           <Field label="Description / task" className="sm:col-span-2">
-            <Textarea placeholder="Daily 10-minute tables drill, reviewed every Friday." />
+             <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Daily 10-minute tables drill, reviewed every Friday." />
           </Field>
         </div>
         <div className="mt-5">
           <p className="text-[13px] font-medium text-ink mb-2">Add learners</p>
           <ul className="grid sm:grid-cols-2 gap-2 max-h-52 overflow-y-auto sala-scroll rounded-lg border border-line p-3">
-            {learners.map((s, i) =>
+             {learners.map((s, i) =>
             <li key={s.id}>
-                <Checkbox label={`${s.name} · ${s.className}`} defaultChecked={i < 5} />
+                 <Checkbox label={`${s.name} · ${s.className}`} checked={selected.includes(s.id) || (!live && i < 5)} onChange={() => setSelected((current) => current.includes(s.id) ? current.filter((id) => id !== s.id) : [...current, s.id])} />
               </li>
             )}
           </ul>

@@ -1,4 +1,3 @@
-import React from 'react';
 import { useParams } from 'react-router-dom';
 import { CheckIcon, DownloadIcon, PlusIcon, XIcon } from 'lucide-react';
 import { Badge, Button, Card, CardHeader, PageHeader, Stat, StatusBadge } from '../../components/ui/primitives';
@@ -7,6 +6,9 @@ import { Alert } from '../../components/ui/feedback';
 import { DUTY_ROSTER, HR_TICKETS, PAYROLL_SUMMARY, PAYSLIP_HISTORY, STAFF_DIRECTORY, STAFF_LEAVE_QUEUE } from '../../data/hr';
 import { formatKES } from '../../data/finance';
 import { useApp } from '../../contexts/AppContext';
+import { useApiLive, useDashboard, useList } from '../../api/hooks';
+import { api } from '../../api/client';
+import type { ApiEmployee, ApiLeaveRequest, DashboardHR } from '../../api/types';
 
 const TITLES: Record<string, {title: string;sub: string;}> = {
   overview: { title: 'Human resources', sub: '86 staff · attendance, leave, payroll and support' },
@@ -22,6 +24,67 @@ export function HRPortal() {
   const { tab = 'overview' } = useParams();
   const meta = TITLES[tab] ?? TITLES.overview;
   const { toast } = useApp();
+  const live = useApiLive();
+  const dashboard = useDashboard<DashboardHR>('hr');
+  const employees = useList<ApiEmployee>('/hr/employees/');
+  const leaveRequests = useList<ApiLeaveRequest>('/hr/leave-requests/');
+  const attendance = useList<Record<string, unknown>>('/attendance/hr/');
+  const payrollPeriods = useList<Record<string, unknown>>('/hr/payroll-periods/');
+  const payslips = useList<Record<string, unknown>>('/hr/payslips/');
+  const duties = useList<Record<string, unknown>>('/hr/duty-assignments/');
+  const tickets = useList<Record<string, unknown>>('/hr/tickets/');
+
+  const staffRows = live
+    ? (employees.data ?? []).map((employee) => ({
+      name: employee.full_name,
+      role: employee.role_title ?? '—',
+      dept: employee.department_name ?? '—',
+      staffNo: employee.employee_number,
+      status: employee.employment_status === 'ACTIVE' ? 'Active' : employee.employment_status,
+      phone: employee.person?.phone ?? '—'
+    }))
+    : STAFF_DIRECTORY;
+  const leaveRows = live
+    ? (leaveRequests.data ?? []).map((request) => ({
+      id: request.id,
+      staff: request.employee_name,
+      role: request.leave_type_name,
+      type: request.leave_type_name,
+      dates: `${request.start_date} – ${request.end_date}`,
+      days: request.days,
+      status: request.status.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+    }))
+    : STAFF_LEAVE_QUEUE;
+  const staffCount = live ? staffRows.length : PAYROLL_SUMMARY.staff;
+  const pendingTickets = dashboard.data?.pending_tickets ?? HR_TICKETS.filter((t) => t.status !== 'Closed' && t.status !== 'Resolved').length;
+  const pendingLeave = leaveRows.filter((row) => row.status === 'Pending').length;
+  const payrollRows = live
+    ? (payslips.data ?? []).map((slip) => ({ month: String(slip.payroll_period_name ?? slip.payroll_period ?? 'Current period'), gross: Number(slip.gross_salary ?? 0), net: Number(slip.net_salary ?? 0), status: String(slip.status ?? 'DRAFT').replace(/_/g, ' ') }))
+    : PAYSLIP_HISTORY;
+  const dutyRows = live
+    ? (duties.data ?? []).map((assignment) => ({ day: String(assignment.date ?? '—'), time: `${assignment.start_time ?? '—'} – ${assignment.end_time ?? '—'}`, duty: String(assignment.duty_name ?? 'Duty'), teacher: String(assignment.employee_name ?? '—'), location: '—' }))
+    : DUTY_ROSTER;
+  const ticketRows = live
+    ? (tickets.data ?? []).map((ticket) => ({ id: String(ticket.id ?? '—').slice(0, 8), staff: String(ticket.employee_name ?? '—'), subject: String(ticket.subject ?? '—'), category: String(ticket.category ?? '—'), created: String(ticket.created_at ?? '—').slice(0, 10), status: String(ticket.status ?? 'OPEN').replace(/_/g, ' ') }))
+    : HR_TICKETS;
+  const attendanceRows = live
+    ? staffRows.map((row) => ({ ...row, status: String((attendance.data ?? []).find((record) => record.employee_name === row.name)?.status ?? row.status) }))
+    : staffRows;
+  const payrollLabel = live && payrollPeriods.data?.[0]?.name ? String(payrollPeriods.data[0].name) : 'September 2026 payroll run';
+
+  const decideLeave = async (id: string, action: 'approve' | 'reject') => {
+    if (!live) {
+      toast({ tone: action === 'approve' ? 'success' : 'warning', title: action === 'approve' ? 'Leave approved' : 'Leave rejected' });
+      return;
+    }
+    try {
+      await api.post(`/hr/leave-requests/${id}/${action}/`, { comment: '' });
+      toast({ tone: action === 'approve' ? 'success' : 'warning', title: action === 'approve' ? 'Leave approved' : 'Leave rejected' });
+      window.location.reload();
+    } catch (error) {
+      toast({ tone: 'warning', title: 'Leave action failed', body: error instanceof Error ? error.message : 'Please try again.' });
+    }
+  };
 
   return (
     <div>
@@ -42,12 +105,12 @@ export function HRPortal() {
 
       {tab === 'overview' &&
       <div className="space-y-6">
-          <Alert tone="pending" title="2 leave requests are awaiting your approval">Grade 4 Acacia needs cover for 12 – 16 October.</Alert>
+          <Alert tone="pending" title={`${pendingLeave} leave requests are awaiting your approval`}>Review pending requests and arrange cover before approving.</Alert>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <Stat label="Total staff" value={PAYROLL_SUMMARY.staff} sub="64 teaching · 22 support" tone="primary" />
+            <Stat label="Total staff" value={staffCount} sub="Teaching and support staff" tone="primary" />
             <Stat label="Attendance today" value="97.8%" sub="4 on approved leave" />
             <Stat label="Monthly payroll" value={formatKES(PAYROLL_SUMMARY.grossMonthly)} sub={`Next run ${PAYROLL_SUMMARY.nextRun}`} tone="gold" />
-            <Stat label="Open tickets" value={HR_TICKETS.filter((t) => t.status !== 'Closed' && t.status !== 'Resolved').length} sub="Average 1.4 days to close" />
+            <Stat label="Open tickets" value={pendingTickets} sub="Awaiting HR action" />
           </div>
           <div className="grid gap-6 lg:grid-cols-2">
             <ChartFrame title="Staff attendance" subtitle="Monthly rate">
@@ -66,7 +129,7 @@ export function HRPortal() {
             <Card>
               <CardHeader title="Leave awaiting approval" />
               <ul className="divide-y divide-line">
-                {STAFF_LEAVE_QUEUE.filter((l) => l.status === 'Pending').map((l) =>
+                {leaveRows.filter((l) => l.status === 'Pending').map((l) =>
               <li key={l.id} className="px-5 py-3.5 flex flex-wrap items-center justify-between gap-3">
                     <div>
                       <p className="text-[14px] font-medium text-ink">{l.staff}</p>
@@ -75,10 +138,10 @@ export function HRPortal() {
                       </p>
                     </div>
                     <span className="flex gap-1.5">
-                      <Button size="sm" icon={<CheckIcon size={14} />} onClick={() => toast({ tone: 'success', title: 'Leave approved', body: `${l.staff} · ${l.dates}` })}>
+                      <Button size="sm" icon={<CheckIcon size={14} />} onClick={() => void decideLeave(l.id, 'approve')}>
                         Approve
                       </Button>
-                      <Button size="sm" variant="ghost" icon={<XIcon size={14} />} onClick={() => toast({ tone: 'warning', title: 'Leave rejected', body: `${l.staff} has been notified.` })}>
+                      <Button size="sm" variant="ghost" icon={<XIcon size={14} />} onClick={() => void decideLeave(l.id, 'reject')}>
                         Reject
                       </Button>
                     </span>
@@ -92,7 +155,7 @@ export function HRPortal() {
 
       {tab === 'staff' &&
       <Card>
-          <CardHeader title={`${STAFF_DIRECTORY.length} staff records`} />
+          <CardHeader title={`${staffRows.length} staff records`} />
           <DataTable
           columns={[
           { key: 'name', header: 'Staff', render: (r: any) => <span className="font-medium">{r.name}</span> },
@@ -102,7 +165,7 @@ export function HRPortal() {
           { key: 'phone', header: 'Phone', hideOnMobile: true },
           { key: 'status', header: 'Status', render: (r: any) => <StatusBadge status={r.status} /> }]
           }
-          rows={STAFF_DIRECTORY}
+           rows={attendanceRows}
           mobileTitle={(r: any) => r.name}
           caption="Staff directory" />
         
@@ -111,7 +174,7 @@ export function HRPortal() {
 
       {tab === 'attendance' &&
       <Card>
-          <CardHeader title="Staff attendance" subtitle="Friday 20 September 2026" />
+           <CardHeader title="Staff attendance" subtitle={payrollLabel} />
           <DataTable
           columns={[
           { key: 'name', header: 'Staff', render: (r: any) => <span className="font-medium">{r.name}</span> },
@@ -120,7 +183,7 @@ export function HRPortal() {
           { key: 'out', header: 'Clock out', render: (r: any) => r.status === 'On Leave' ? '—' : '—' },
           { key: 'status', header: 'Status', render: (r: any) => <StatusBadge status={r.status === 'On Leave' ? 'On Leave' : 'Present'} /> }]
           }
-          rows={STAFF_DIRECTORY}
+          rows={staffRows}
           caption="Staff attendance" />
         
         </Card>
@@ -144,17 +207,17 @@ export function HRPortal() {
             render: (r: any) =>
             r.status === 'Pending' ?
             <span className="flex justify-end gap-1.5">
-                      <Button size="sm" onClick={() => toast({ tone: 'success', title: 'Leave approved', body: `${r.staff} · ${r.dates}` })}>
+                      <Button size="sm" onClick={() => void decideLeave(r.id, 'approve')}>
                         Approve
                       </Button>
-                      <Button size="sm" variant="ghost" onClick={() => toast({ tone: 'warning', title: 'Leave rejected' })}>
+                      <Button size="sm" variant="ghost" onClick={() => void decideLeave(r.id, 'reject')}>
                         Reject
                       </Button>
                     </span> :
             null
           }]
           }
-          rows={STAFF_LEAVE_QUEUE}
+          rows={leaveRows}
           mobileTitle={(r: any) => r.staff}
           caption="Leave requests" />
         
@@ -178,7 +241,7 @@ export function HRPortal() {
             { key: 'net', header: 'Net', align: 'right', render: (r: any) => formatKES(r.net) },
             { key: 'status', header: 'Status', render: (r: any) => <Badge tone="success">{r.status}</Badge> }]
             }
-            rows={PAYSLIP_HISTORY}
+             rows={payrollRows}
             caption="Payslip history" />
           
           </Card>
@@ -196,7 +259,7 @@ export function HRPortal() {
           { key: 'teacher', header: 'Teacher' },
           { key: 'location', header: 'Location', hideOnMobile: true }]
           }
-          rows={DUTY_ROSTER}
+           rows={dutyRows}
           caption="Duty roster" />
         
         </Card>
@@ -214,7 +277,7 @@ export function HRPortal() {
           { key: 'created', header: 'Created', hideOnMobile: true },
           { key: 'status', header: 'Status', render: (r: any) => <StatusBadge status={r.status} /> }]
           }
-          rows={HR_TICKETS}
+           rows={ticketRows}
           mobileTitle={(r: any) => r.subject}
           caption="HR tickets" />
         

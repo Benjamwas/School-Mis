@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { SendIcon, UsersIcon } from 'lucide-react';
 import { Avatar, Badge, Button, Card, CardHeader, Field, PageHeader, Select, Textarea, cx } from '../../components/ui/primitives';
 import { Modal } from '../../components/ui/feedback';
 import { useApp } from '../../contexts/AppContext';
+import { useApiLive, useList } from '../../api/hooks';
+import type { ApiNotification } from '../../api/types';
 
 const THREADS = [
 {
@@ -22,12 +24,63 @@ const THREADS = [
 { id: 't3', with: 'Ruth Kiptoo', about: 'Parent of Samuel Kiptoo · Grade 4 Acacia', initials: 'RK', when: '3d', unread: true, messages: [{ from: 'me', text: 'Samuel has missed three days this fortnight without a note. Is everything alright at home?', when: '17 Sep, 4:20pm' }] }];
 
 
+function relativeWhen(value?: string): string {
+  if (!value) return '—';
+  const then = new Date(value);
+  if (Number.isNaN(then.getTime())) return '—';
+  const minutes = Math.round((Date.now() - then.getTime()) / 60000);
+  if (minutes < 60) return `${Math.max(minutes, 1)}m`;
+  if (minutes < 60 * 24) return `${Math.round(minutes / 60)}h`;
+  if (minutes < 60 * 48) return '1d';
+  return `${Math.round(minutes / (60 * 24))}d`;
+}
+
+function initialsOf(name: string): string {
+  return name
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((x) => x[0]?.toUpperCase() ?? '')
+    .join('');
+}
+
+function categoryOf(value?: string): string {
+  if (!value) return 'Notification';
+  return value.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 export function TeacherMessages() {
+  const live = useApiLive();
+  const notifications = useList<ApiNotification>('/notifications/');
   const [active, setActive] = useState(THREADS[0].id);
   const [draft, setDraft] = useState('');
   const [broadcast, setBroadcast] = useState(false);
-  const thread = THREADS.find((t) => t.id === active)!;
   const { toast } = useApp();
+
+  const liveThreads = useMemo(() => {
+    if (!notifications.data) return null;
+    return notifications.data.map((n) => ({
+      id: n.id,
+      with: n.title,
+      about: categoryOf(n.type),
+      initials: initialsOf(n.title),
+      when: relativeWhen(n.created_at),
+      unread: !n.is_read,
+      messages: n.body
+        ? [{ from: 'them' as const, text: n.body, when: relativeWhen(n.created_at) }]
+        : []
+    }));
+  }, [notifications.data]);
+
+  const threads = liveThreads ?? THREADS;
+
+  useEffect(() => {
+    if (liveThreads && !liveThreads.some((t) => t.id === active)) {
+      setActive(liveThreads[0]?.id ?? '');
+    }
+  }, [liveThreads, active]);
+
+  const thread = threads.find((t) => t.id === active) ?? threads[0];
 
   return (
     <div>
@@ -41,11 +94,20 @@ export function TeacherMessages() {
         } />
       
 
+      {live && notifications.error &&
+      <p className="text-sm text-rose-600">{notifications.error}</p>
+      }
+
+      {live && !notifications.error && threads.length === 0 &&
+      <p className="text-sm text-ink-muted">No conversations yet.</p>
+      }
+
+      {thread &&
       <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
         <Card className="h-max overflow-hidden">
-          <CardHeader title="Conversations" subtitle={`${THREADS.filter((t) => t.unread).length} unread`} />
+          <CardHeader title="Conversations" subtitle={`${threads.filter((t) => t.unread).length} unread`} />
           <ul className="divide-y divide-line">
-            {THREADS.map((t) =>
+            {threads.map((t) =>
             <li key={t.id}>
                 <button onClick={() => setActive(t.id)} className={cx('w-full text-left px-4 py-3.5 flex gap-3 transition-colors duration-150', active === t.id ? 'bg-forest-50/70' : 'hover:bg-cream')}>
                   <Avatar initials={t.initials} size="sm" />
@@ -93,6 +155,7 @@ export function TeacherMessages() {
           </div>
         </Card>
       </div>
+      }
 
       <Modal
         open={broadcast}

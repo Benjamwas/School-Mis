@@ -1,4 +1,4 @@
-import React from 'react';
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRightIcon, CalendarCheckIcon, ClipboardListIcon, TrendingUpIcon, WalletIcon } from 'lucide-react';
 import { Avatar, Badge, Button, Card, CardHeader, PageHeader, Progress, Stat, StatusBadge } from '../../components/ui/primitives';
@@ -8,14 +8,43 @@ import { FEE_SUMMARY, formatKES } from '../../data/finance';
 import { EVENTS } from '../../data/school';
 import { GUARDIANS, STUDENTS } from '../../data/people';
 import { useApp } from '../../contexts/AppContext';
+import { useApiLive, useList, useObject } from '../../api/hooks';
+import type { ApiAnnouncement, DashboardAnnouncements } from '../../api/types';
+
+const MOCK_SCHOOL_NEWS = [
+  { t: 'Parent–Teacher Consultation Day', b: 'Booking opens Monday at 8:00am. Slots are 15 minutes.', w: 'Today' },
+  { t: 'Term 3 examination timetable', b: 'Assessments run 20 – 30 October.', w: '2 days ago' },
+  { t: 'Grade 4 trip consent form', b: 'Please confirm by Friday 26 September.', w: '4 days ago' }];
+
+function announcementDate(value?: string): string {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat('en-KE', { day: 'numeric', month: 'short', year: 'numeric' }).format(date);
+}
 
 export function ParentDashboard() {
   const { activeChildId, setActiveChildId } = useApp();
+  const live = useApiLive();
+  const summary = useObject<DashboardAnnouncements>('dashboards/announcements/');
+  const announcements = useList<ApiAnnouncement>('announcements/');
+  const parentProfile = useObject<{ id: string; full_name: string }>('/parents/me');
+  const liveChildren = useList<{ student: string; child: { full_name: string; admission_number: string; current_class_name?: string; status: string } }>(parentProfile.data?.id ? `/parents/${parentProfile.data.id}/children/` : '/parents/me/children/');
   const parent = GUARDIANS[0];
-  const children = STUDENTS.filter((s) => parent.childIds.includes(s.id));
-  const child = children.find((c) => c.id === activeChildId) ?? children[0];
+  const demoChildren = STUDENTS.filter((s) => parent.childIds.includes(s.id));
+  const children = live
+    ? (liveChildren.data ?? []).map((relation) => ({ id: relation.student, name: relation.child.full_name, className: relation.child.current_class_name ?? 'Current class', stream: '', admissionNo: relation.child.admission_number, status: relation.child.status, avatarInitials: relation.child.full_name.split(' ').map((part) => part[0]).join('').slice(0, 2) }))
+    : demoChildren;
+  const child = children.find((c) => c.id === activeChildId) ?? children[0] ?? demoChildren[0];
   const average = Math.round(SUBJECT_SCORES.reduce((a, s) => a + s.score, 0) / SUBJECT_SCORES.length);
   const upcoming = ASSIGNMENTS.filter((a) => ['Not Started', 'In Progress', 'Late'].includes(a.status));
+  const schoolNews = useMemo(() => (announcements.data ?? []).map((a) => ({
+    t: a.title,
+    b: a.body,
+    w: [a.author, announcementDate(a.published_at)].filter(Boolean).join(' · ') || 'School',
+  })), [announcements.data]);
+  const visibleSchoolNews = live ? schoolNews : MOCK_SCHOOL_NEWS;
+  const err = summary.error ?? announcements.error;
 
   return (
     <div>
@@ -28,6 +57,8 @@ export function ParentDashboard() {
           </Link>
         } />
       
+
+      {live && err && <p className="text-sm text-rose-600">{err}</p>}
 
       {/* Child switcher */}
       <div className="mb-6 flex flex-wrap gap-2.5">
@@ -179,14 +210,12 @@ export function ParentDashboard() {
           </Card>
 
           <Card>
-            <CardHeader title="From the school" />
+            <CardHeader
+              title="From the school"
+              subtitle={live && summary.data ? `${summary.data.published_this_month} published this month · ${summary.data.unread} unread` : undefined} />
             <ul className="divide-y divide-line">
-              {[
-              { t: 'Parent–Teacher Consultation Day', b: 'Booking opens Monday at 8:00am. Slots are 15 minutes.', w: 'Today' },
-              { t: 'Term 3 examination timetable', b: 'Assessments run 20 – 30 October.', w: '2 days ago' },
-              { t: 'Grade 4 trip consent form', b: 'Please confirm by Friday 26 September.', w: '4 days ago' }].
-              map((m) =>
-              <li key={m.t} className="px-5 py-3.5">
+              {visibleSchoolNews.map((m, i) =>
+              <li key={`${m.t}-${i}`} className="px-5 py-3.5">
                   <p className="text-[13.5px] font-medium text-ink">{m.t}</p>
                   <p className="text-[12.5px] text-ink-muted mt-0.5 leading-relaxed">{m.b}</p>
                   <p className="text-[11.5px] text-ink-soft mt-1">{m.w}</p>

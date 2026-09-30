@@ -1,12 +1,27 @@
-import React from 'react';
+import { useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { CheckCircle2Icon, FileTextIcon, LockIcon, PlayCircleIcon } from 'lucide-react';
 import { Badge, Button, Card, CardHeader, PageHeader, Progress } from '../../components/ui/primitives';
 import { LESSON, SUBJECT_TOPICS } from '../../data/academics';
+import { useApiLive, useList } from '../../api/hooks';
 
 export function StudentSubject() {
   const { slug = 'mathematics' } = useParams();
-  const subject = SUBJECT_TOPICS.find((s) => s.subject.toLowerCase().startsWith(slug.toLowerCase())) ?? SUBJECT_TOPICS[0];
+  const live = useApiLive();
+  const topicsRes = useList<Record<string, unknown>>('/lms/topics/');
+  const progressRes = useList<Record<string, unknown>>('/lms/progress/');
+  const liveSubject = useMemo(() => {
+    if (!topicsRes.data) return null;
+    const rows = topicsRes.data.filter((topic) => String(topic.subject_name ?? '').toLowerCase().startsWith(slug.toLowerCase()));
+    if (!rows.length) return null;
+    const progress = new Map((progressRes.data ?? []).map((item) => [String(item.topic ?? ''), item]));
+    const topics = rows.map((topic) => {
+      const value = Number(progress.get(String(topic.id))?.progress_percentage ?? 0);
+      return { name: String(topic.name ?? 'Untitled topic'), lessons: Number(topic.lesson_count ?? 0), progress: value, status: value >= 100 ? 'Completed' : value > 0 ? 'In Progress' : 'Not Started' };
+    });
+    return { subject: String(rows[0].subject_name), icon: 'BookOpen', progress: Math.round(topics.reduce((sum, topic) => sum + topic.progress, 0) / topics.length), topics };
+  }, [progressRes.data, slug, topicsRes.data]);
+  const subject = live ? liveSubject ?? SUBJECT_TOPICS[0] : SUBJECT_TOPICS.find((s) => s.subject.toLowerCase().startsWith(slug.toLowerCase())) ?? SUBJECT_TOPICS[0];
   const active = subject.topics.find((t) => t.status === 'In Progress') ?? subject.topics[0];
 
   return (

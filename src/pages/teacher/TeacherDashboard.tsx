@@ -1,4 +1,4 @@
-import React from 'react';
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { BookOpenIcon, ClipboardListIcon, ClockIcon, PlusIcon, SchoolIcon, UsersIcon } from 'lucide-react';
 import { Badge, Button, Card, CardHeader, PageHeader, Progress, Stat, StatusBadge } from '../../components/ui/primitives';
@@ -9,14 +9,56 @@ import { CLASSES, TEACHERS } from '../../data/people';
 import { DUTY_ROSTER, MY_ATTENDANCE } from '../../data/hr';
 import { ROLE_USERS } from '../../data/navigation';
 import { useApp } from '../../contexts/AppContext';
+import { useApiLive, useDashboard, useList, useObject } from '../../api/hooks';
+import type { ApiEvent, DashboardAnnouncements, DashboardOverview } from '../../api/types';
+
+function titleCase(value: string): string {
+  if (!value) return '—';
+  return value.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function dayMonth(value: string): string {
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+}
+
+function clockTime(value?: string): string {
+  if (!value) return '—';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return '—';
+  return d.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' });
+}
 
 export function TeacherDashboard() {
   const { role } = useApp();
+  const live = useApiLive();
+  const overview = useDashboard<DashboardOverview>('overview');
+  const events = useList<ApiEvent>('/events/');
+  const announcements = useObject<DashboardAnnouncements>('/dashboards/announcements/');
   const isClassTeacher = role === 'classteacher';
   const teacher = isClassTeacher ? TEACHERS[0] : TEACHERS[1];
   const user = ROLE_USERS[role];
   const classes = isClassTeacher ? CLASSES.slice(0, 1) : CLASSES.slice(0, 3);
   const pendingGrading = SUBMISSIONS.filter((s) => s.status === 'Submitted').length;
+
+  const error = overview.error ?? events.error ?? announcements.error;
+
+  const liveEvents = useMemo(() => {
+    if (!events.data) return null;
+    return events.data.map((e) => ({
+      id: e.id,
+      title: e.title,
+      date: dayMonth(e.start_time),
+      time: e.end_time ? `${clockTime(e.start_time)} – ${clockTime(e.end_time)}` : clockTime(e.start_time),
+      type: titleCase(e.event_type ?? ''),
+      location: e.venue ?? '—',
+      status: titleCase(e.status)
+    }));
+  }, [events.data]);
+
+  const learnersTaught = overview.data?.students?.active;
+  const activeLearners = overview.data ? learnersTaught : isClassTeacher ? 26 : 75;
 
   return (
     <div>
@@ -43,6 +85,10 @@ export function TeacherDashboard() {
         } />
       
 
+      {live && error &&
+      <p className="text-sm text-rose-600">{error}</p>
+      }
+
       {!isClassTeacher &&
       <div className="mb-6">
           <Alert tone="info" title="Subject teacher view">
@@ -52,8 +98,8 @@ export function TeacherDashboard() {
       }
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Stat label={isClassTeacher ? 'My class' : 'My classes'} value={isClassTeacher ? 'Grade 4 Acacia' : '3 classes'} sub={isClassTeacher ? '26 learners' : 'Grade 4, 5 and 6'} icon={<SchoolIcon size={16} />} tone="primary" />
-        <Stat label="Learners taught" value={isClassTeacher ? 26 : 75} sub={isClassTeacher ? 'All subjects' : 'English only'} icon={<UsersIcon size={16} />} />
+        <Stat label={isClassTeacher ? 'My class' : 'My classes'} value={isClassTeacher ? 'Grade 4 Acacia' : '3 classes'} sub={overview.data ? overview.data.academics?.current_year || 'This year' : isClassTeacher ? '26 learners' : 'Grade 4, 5 and 6'} icon={<SchoolIcon size={16} />} tone="primary" />
+        <Stat label="Learners taught" value={activeLearners} sub={overview.data ? 'Active learners on roll' : isClassTeacher ? 'All subjects' : 'English only'} icon={<UsersIcon size={16} />} />
         <Stat label="Awaiting grading" value={pendingGrading} sub="Insha · submitted this week" icon={<ClipboardListIcon size={16} />} tone="gold" />
         <Stat label="Clocked in" value={MY_ATTENDANCE.clockIn} sub={`${MY_ATTENDANCE.hoursToday} today`} icon={<ClockIcon size={16} />} />
       </div>
@@ -207,6 +253,51 @@ export function TeacherDashboard() {
               </Link>
             </div>
           </Card>
+
+          {liveEvents &&
+          <Card>
+            <CardHeader title="School events" subtitle="Next on the calendar" />
+            <ul className="divide-y divide-line">
+              {liveEvents.slice(0, 5).map((e) =>
+              <li key={e.id} className="px-5 py-3 flex items-start gap-3.5">
+                  <div className="w-12 shrink-0 rounded-lg bg-forest-50 text-center py-1.5">
+                    <span className="block text-[13px] font-semibold text-forest-800 leading-none">{e.date}</span>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[13.5px] font-medium text-ink truncate">{e.title}</p>
+                    <p className="text-[12.5px] text-ink-muted truncate">
+                      {e.time} · {e.location}
+                    </p>
+                  </div>
+                </li>
+              )}
+              {liveEvents.length === 0 &&
+              <li className="px-5 py-4 text-[13px] text-ink-muted">No events scheduled.</li>
+              }
+            </ul>
+          </Card>
+          }
+
+          {announcements.data &&
+          <Card className="p-5">
+            <h3 className="text-[14px] font-semibold text-ink">Announcements</h3>
+            <ul className="mt-3 space-y-2 text-[13.5px]">
+              <li className="flex justify-between">
+                <span className="text-ink-muted">Published this month</span>
+                <span className="font-medium text-ink tabular-nums">{announcements.data.published_this_month}</span>
+              </li>
+              <li className="flex justify-between">
+                <span className="text-ink-muted">Unread</span>
+                <span className="font-medium text-ink tabular-nums">{announcements.data.unread}</span>
+              </li>
+            </ul>
+            <div className="mt-3">
+              <Link to="/teacher/messages" className="text-[13px] font-medium text-forest-700 hover:underline">
+                Open notifications
+              </Link>
+            </div>
+          </Card>
+          }
 
           <Card className="p-5">
             <p className="flex items-center gap-2 text-[14px] font-semibold text-ink">

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { CheckCircle2Icon, XCircleIcon } from 'lucide-react';
@@ -6,17 +6,33 @@ import { Button, Card, PageHeader, Progress, cx } from '../../components/ui/prim
 import { ConfirmDialog } from '../../components/ui/feedback';
 import { QUIZ, RECOMMENDED_TOPICS } from '../../data/academics';
 import { useApp } from '../../contexts/AppContext';
+import { api } from '../../api/client';
+import { useApiLive, useList } from '../../api/hooks';
 
 export function StudentQuiz() {
+  const live = useApiLive();
+  const quizzesRes = useList<Record<string, unknown>>('/lms/quizzes/');
   const [index, setIndex] = useState(0);
+  const [questions, setQuestions] = useState(QUIZ.questions);
+  const [quizId, setQuizId] = useState<string | null>(null);
   const [answers, setAnswers] = useState<(number | null)[]>(Array(QUIZ.questions.length).fill(null));
   const [submitted, setSubmitted] = useState(false);
   const [confirm, setConfirm] = useState(false);
   const { toast } = useApp();
 
-  const q = QUIZ.questions[index];
-  const score = answers.filter((a, i) => a === QUIZ.questions[i].answer).length;
-  const pct = Math.round(score / QUIZ.questions.length * 100);
+  useEffect(() => {
+    const quiz = quizzesRes.data?.[0];
+    if (!live || !quiz || !Array.isArray(quiz.questions)) return;
+    const nextQuestions = quiz.questions as typeof QUIZ.questions;
+    setQuestions(nextQuestions);
+    setQuizId(String(quiz.id));
+    setAnswers(Array(nextQuestions.length).fill(null));
+    setIndex(0);
+  }, [live, quizzesRes.data]);
+
+  const q = questions[index] ?? QUIZ.questions[0];
+  const score = answers.filter((a, i) => a === questions[i]?.answer).length;
+  const pct = Math.round(score / Math.max(questions.length, 1) * 100);
 
   const choose = (i: number) => {
     const next = [...answers];
@@ -24,23 +40,32 @@ export function StudentQuiz() {
     setAnswers(next);
   };
 
-  const finish = () => {
+  const finish = async () => {
     setConfirm(false);
+    if (live && quizId) {
+      try {
+        const result = await api.post<{ percentage: number }>(`/lms/quizzes/${quizId}/submit/`, { answers });
+        toast({ tone: result.percentage >= 60 ? 'success' : 'warning', title: `Quiz complete — ${result.percentage}%`, body: 'Your attempt has been saved.' });
+      } catch (error) {
+        toast({ tone: 'warning', title: 'Quiz could not be submitted', body: error instanceof Error ? error.message : 'Please try again.' });
+        return;
+      }
+    }
     setSubmitted(true);
-    toast({ tone: pct >= 60 ? 'success' : 'warning', title: `Quiz complete — ${pct}%`, body: `You answered ${score} of ${QUIZ.questions.length} correctly.` });
+    toast({ tone: pct >= 60 ? 'success' : 'warning', title: `Quiz complete — ${pct}%`, body: `You answered ${score} of ${questions.length} correctly.` });
   };
 
   if (submitted) {
     return (
       <div>
-        <PageHeader title="Quiz results" subtitle={`${QUIZ.title} · ${QUIZ.subject}`} />
+         <PageHeader title="Quiz results" subtitle={`${live && quizzesRes.data?.[0]?.title ? quizzesRes.data[0].title : QUIZ.title} · ${live && quizzesRes.data?.[0]?.subject_name ? quizzesRes.data[0].subject_name : QUIZ.subject}`} />
         <div className="grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
           <div className="space-y-6">
             <Card className="p-6 text-center">
               <p className="text-[13px] text-ink-muted">You scored</p>
               <p className="font-serif text-[52px] leading-none text-forest-800 mt-1">{pct}%</p>
               <p className="mt-2 text-[14px] text-ink-muted">
-                {score} of {QUIZ.questions.length} correct
+                 {score} of {questions.length} correct
               </p>
               <Progress className="mt-4 max-w-sm mx-auto" value={pct} tone={pct >= 60 ? 'forest' : 'gold'} label="Quiz score" />
             </Card>
@@ -48,7 +73,7 @@ export function StudentQuiz() {
             <Card className="p-5">
               <h2 className="text-[15px] font-semibold text-ink">Question review</h2>
               <ul className="mt-4 space-y-4">
-                {QUIZ.questions.map((question, i) => {
+                 {questions.map((question, i) => {
                   const correct = answers[i] === question.answer;
                   return (
                     <li key={i} className="rounded-lg border border-line p-4">
@@ -87,7 +112,7 @@ export function StudentQuiz() {
                 onClick={() => {
                   setSubmitted(false);
                   setIndex(0);
-                  setAnswers(Array(QUIZ.questions.length).fill(null));
+                   setAnswers(Array(questions.length).fill(null));
                 }}>
                 
                 Retake quiz
@@ -106,16 +131,16 @@ export function StudentQuiz() {
 
   return (
     <div className="max-w-3xl">
-      <PageHeader title={QUIZ.title} subtitle={`${QUIZ.subject} · ${QUIZ.questions.length} questions · no time limit`} />
+      <PageHeader title={live && quizzesRes.data?.[0]?.title ? String(quizzesRes.data[0].title) : QUIZ.title} subtitle={`${live && quizzesRes.data?.[0]?.subject_name ? quizzesRes.data[0].subject_name : QUIZ.subject} · ${questions.length} questions · no time limit`} />
 
       <Card className="p-6">
         <div className="flex items-center justify-between gap-4">
           <p className="text-[13px] font-medium text-ink-muted">
-            Question {index + 1} of {QUIZ.questions.length}
+             Question {index + 1} of {questions.length}
           </p>
           <p className="text-[13px] text-ink-muted">{answers.filter((a) => a != null).length} answered</p>
         </div>
-        <Progress className="mt-3" value={(index + 1) / QUIZ.questions.length * 100} label="Quiz progress" />
+        <Progress className="mt-3" value={(index + 1) / Math.max(questions.length, 1) * 100} label="Quiz progress" />
 
         <motion.div key={index} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}>
           <h2 className="mt-6 font-serif text-[24px] leading-snug text-ink">{q.q}</h2>
@@ -148,7 +173,7 @@ export function StudentQuiz() {
           <Button variant="ghost" onClick={() => setIndex((i) => Math.max(0, i - 1))} disabled={index === 0}>
             Previous
           </Button>
-          {index === QUIZ.questions.length - 1 ?
+           {index === questions.length - 1 ?
           <Button onClick={() => setConfirm(true)}>Submit quiz</Button> :
 
           <Button onClick={() => setIndex((i) => i + 1)}>Next question</Button>
@@ -161,7 +186,7 @@ export function StudentQuiz() {
         onClose={() => setConfirm(false)}
         onConfirm={finish}
         title="Submit your quiz?"
-        body={`You have answered ${answers.filter((a) => a != null).length} of ${QUIZ.questions.length} questions. You can retake this quiz twice.`}
+         body={`You have answered ${answers.filter((a) => a != null).length} of ${questions.length} questions. You can retake this quiz twice.`}
         confirmLabel="Submit" />
       
     </div>);

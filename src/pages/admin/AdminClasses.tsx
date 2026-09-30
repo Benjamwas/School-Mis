@@ -3,8 +3,38 @@ import { PlusIcon } from 'lucide-react';
 import { Badge, Button, Card, CardHeader, PageHeader, Progress, Stat } from '../../components/ui/primitives';
 import { DataTable } from '../../components/ui/data';
 import { CLASSES, TEACHERS } from '../../data/people';
+import { useApiLive, useList } from '../../api/hooks';
+import type { ApiClass } from '../../api/types';
+
+const CLASS_STATUS: Record<string, string> = {
+  ACTIVE: 'Active',
+  ARCHIVED: 'Archived'
+};
+
+function classStatus(status?: string): string {
+  if (!status) return 'Archived';
+  return CLASS_STATUS[status] ?? 'Archived';
+}
 
 export function AdminClasses() {
+  const live = useApiLive();
+  const classes = useList<ApiClass>('schools/classes/');
+
+  const rows: any[] = live
+    ? (classes.data ?? []).map((c) => ({
+      id: c.id,
+      name: c.display_name || c.name,
+      grade: c.grade_level_name || '',
+      year: c.academic_year_name || '',
+      status: classStatus(c.status),
+      teacher: c.class_teacher ? 'Assigned' : 'Unassigned',
+      learners: 0,
+      room: '',
+      average: 0,
+      attendance: 0
+    }))
+    : CLASSES;
+
   return (
     <div>
       <PageHeader
@@ -26,6 +56,9 @@ export function AdminClasses() {
 
       <Card className="mt-6">
         <CardHeader title="Class list" subtitle="Upper and lower primary" />
+        {live && classes.error &&
+        <p className="px-5 pt-3 text-sm text-rose-600">{classes.error}</p>
+        }
         <DataTable
           columns={[
           { key: 'name', header: 'Class', render: (r: any) => <span className="font-medium">{r.name}</span> },
@@ -35,7 +68,7 @@ export function AdminClasses() {
           { key: 'average', header: 'Average', align: 'right', render: (r: any) => <Badge tone={r.average < 70 ? 'warning' : 'success'}>{r.average}%</Badge> },
           { key: 'attendance', header: 'Attendance', align: 'right', render: (r: any) => `${r.attendance}%`, hideOnMobile: true }]
           }
-          rows={CLASSES}
+          rows={rows}
           mobileTitle={(r: any) => r.name}
           caption="Class list" />
         

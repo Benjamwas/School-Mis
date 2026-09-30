@@ -4,12 +4,32 @@ import { Badge, Button, Card, CardHeader, Field, PageHeader, Select, Stat, Statu
 import { ConfirmDialog } from '../../components/ui/feedback';
 import { DataTable } from '../../components/ui/data';
 import { useApp } from '../../contexts/AppContext';
+import { useApiLive, useList } from '../../api/hooks';
+import type { ApiAnnouncement, ApiNotification } from '../../api/types';
 
 const CHANNELS = [
-{ id: 'SMS', icon: <SmartphoneIcon size={17} />, note: 'Delivered via Africa’s Talking · KES 0.80 per message' },
-{ id: 'WhatsApp', icon: <MessageCircleIcon size={17} />, note: 'Verified business sender · SALA Schools' },
-{ id: 'In-app', icon: <BellIcon size={17} />, note: 'Parent and staff portal notification' }];
+  { id: 'SMS', icon: <SmartphoneIcon size={17} />, note: 'Delivered via Africa’s Talking · KES 0.80 per message' },
+  { id: 'WhatsApp', icon: <MessageCircleIcon size={17} />, note: 'Verified business sender · SALA Schools' },
+  { id: 'In-app', icon: <BellIcon size={17} />, note: 'Parent and staff portal notification' }];
 
+const MOCK_MESSAGES = [
+  { subject: 'Consultation Day booking opens Monday', channel: 'SMS', audience: 'All parents', recipients: 932, sent: '18 Sep, 4:00pm', status: 'Delivered' },
+  { subject: 'Term 3 examination timetable', channel: 'In-app', audience: 'All parents', recipients: 932, sent: '15 Sep, 9:00am', status: 'Delivered' },
+  { subject: 'Grade 4 trip consent reminder', channel: 'WhatsApp', audience: 'Grade 4 parents', recipients: 78, sent: '12 Sep, 2:30pm', status: 'Delivered' },
+  { subject: 'Staff briefing moved to 3:30pm', channel: 'SMS', audience: 'All staff', recipients: 86, sent: '10 Sep, 11:10am', status: 'Delivered' },
+  { subject: 'Fee balance reminder — Term 3', channel: 'SMS', audience: 'Parents with balances', recipients: 214, sent: '08 Sep, 8:00am', status: 'Scheduled' }];
+
+function fmtStamp(value?: string | null): string {
+  if (!value) return '—';
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return '—';
+  return d.toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+}
+
+function labelise(value?: string | null): string {
+  if (!value) return '—';
+  return value.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
 export function AdminCommunication() {
   const [channel, setChannel] = useState('SMS');
@@ -20,7 +40,36 @@ export function AdminCommunication() {
   );
   const { toast } = useApp();
 
+  const live = useApiLive();
+  const announcements = useList<ApiAnnouncement>('announcements/');
+  const notifications = useList<ApiNotification>('notifications/');
+
+  const sent: any[] = live
+    ? [
+      ...(announcements.data ?? []).map((a) => ({
+        id: a.id,
+        subject: a.title,
+        channel: a.channels?.[0] ?? 'In-app',
+        audience: labelise(a.audience),
+        recipients: 0,
+        sent: fmtStamp(a.published_at),
+        status: labelise(a.status)
+      })),
+      ...(notifications.data ?? []).map((n) => ({
+        id: n.id,
+        subject: n.title,
+        channel: 'In-app',
+        audience: labelise(n.type),
+        recipients: 0,
+        sent: fmtStamp(n.created_at),
+        status: n.is_read ? 'Delivered' : 'Pending'
+      }))
+    ]
+    : MOCK_MESSAGES;
+
   const recipients = audience === 'All parents' ? 932 : audience === 'Teachers' ? 86 : audience === 'Grade 4 Acacia parents' ? 26 : 1148;
+
+  const messageError = announcements.error ?? notifications.error;
 
   return (
     <div>
@@ -131,6 +180,9 @@ export function AdminCommunication() {
 
       <Card className="mt-6">
         <CardHeader title="Sent messages" subtitle="Last 30 days" />
+        {live && messageError &&
+        <p className="px-5 pt-3 text-sm text-rose-600">{messageError}</p>
+        }
         <DataTable
           columns={[
           { key: 'subject', header: 'Message', render: (r: any) => <span className="font-medium">{r.subject}</span> },
@@ -140,13 +192,8 @@ export function AdminCommunication() {
           { key: 'sent', header: 'Sent', hideOnMobile: true },
           { key: 'status', header: 'Status', render: (r: any) => <StatusBadge status={r.status} /> }]
           }
-          rows={[
-          { subject: 'Consultation Day booking opens Monday', channel: 'SMS', audience: 'All parents', recipients: 932, sent: '18 Sep, 4:00pm', status: 'Delivered' },
-          { subject: 'Term 3 examination timetable', channel: 'In-app', audience: 'All parents', recipients: 932, sent: '15 Sep, 9:00am', status: 'Delivered' },
-          { subject: 'Grade 4 trip consent reminder', channel: 'WhatsApp', audience: 'Grade 4 parents', recipients: 78, sent: '12 Sep, 2:30pm', status: 'Delivered' },
-          { subject: 'Staff briefing moved to 3:30pm', channel: 'SMS', audience: 'All staff', recipients: 86, sent: '10 Sep, 11:10am', status: 'Delivered' },
-          { subject: 'Fee balance reminder — Term 3', channel: 'SMS', audience: 'Parents with balances', recipients: 214, sent: '08 Sep, 8:00am', status: 'Scheduled' }]
-          }
+          rows={sent}
+          mobileTitle={(r: any) => r.subject}
           caption="Sent messages" />
         
       </Card>

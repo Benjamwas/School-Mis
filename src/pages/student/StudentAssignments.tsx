@@ -4,12 +4,28 @@ import { ClipboardListIcon } from 'lucide-react';
 import { Button, Card, CardHeader, PageHeader, StatusBadge, cx } from '../../components/ui/primitives';
 import { EmptyState } from '../../components/ui/feedback';
 import { ASSIGNMENTS } from '../../data/academics';
+import { useApiLive, useList } from '../../api/hooks';
 
 const FILTERS = ['All', 'To do', 'Submitted', 'Graded', 'Late'];
 
 export function StudentAssignments() {
   const [filter, setFilter] = useState('All');
-  const rows = ASSIGNMENTS.filter((a) => {
+  const live = useApiLive();
+  const assignmentsRes = useList<Record<string, unknown>>('/subjects/assignments/');
+  const liveRows = (assignmentsRes.data ?? []).map((a) => ({
+    id: String(a.id),
+    title: String(a.title ?? 'Untitled assignment'),
+    subject: String(a.subject ?? '—'),
+    topic: String(a.topic_name ?? a.topic ?? '—'),
+    teacher: String(a.teacher_name ?? 'Your teacher'),
+    due: a.due_date ? new Date(String(a.due_date)).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : 'No due date',
+    marks: Number(a.max_marks ?? 0),
+    status: String(a.my_submission_status ?? 'Not Started').replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+    feedback: String(a.my_submission_feedback ?? ''),
+    score: a.my_submission_marks ? Number(a.my_submission_marks) : null
+  }));
+  const source = live ? liveRows : ASSIGNMENTS;
+  const rows = source.filter((a) => {
     if (filter === 'All') return true;
     if (filter === 'To do') return a.status === 'Not Started' || a.status === 'In Progress';
     if (filter === 'Late') return a.status === 'Late';

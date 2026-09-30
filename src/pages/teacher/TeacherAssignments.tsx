@@ -1,19 +1,56 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ClipboardListIcon, PlusIcon } from 'lucide-react';
 import { Badge, Button, Card, CardHeader, PageHeader, Progress, Stat, StatusBadge, cx } from '../../components/ui/primitives';
 import { ConfirmDialog, EmptyState } from '../../components/ui/feedback';
 import { ASSIGNMENTS, SUBMISSIONS } from '../../data/academics';
 import { useApp } from '../../contexts/AppContext';
+import { useApiLive, useList } from '../../api/hooks';
 
 const FILTERS = ['All', 'Published', 'Needs grading', 'Draft'];
 
+function titleCase(value: string): string {
+  if (!value) return '—';
+  return value.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function dayMonthYear(value?: string): string {
+  if (!value) return '—';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
 export function TeacherAssignments() {
   const { role, toast } = useApp();
+  const live = useApiLive();
+  const assignmentsRes = useList<Record<string, unknown>>('/subjects/assignments/');
   const [filter, setFilter] = useState('All');
   const [remove, setRemove] = useState<string | null>(null);
   const list = role === 'subjectteacher' ? ASSIGNMENTS.filter((a) => a.subject === 'English') : ASSIGNMENTS;
-  const rows = filter === 'Needs grading' ? list.filter((a) => a.status === 'Submitted' || a.status === 'In Progress') : filter === 'Draft' ? [] : list;
+
+  const liveList = useMemo(() => {
+    if (!assignmentsRes.data) return null;
+    return assignmentsRes.data.map((a) => {
+      const status = titleCase(String(a.status ?? ''));
+      return {
+        id: String(a.id ?? ''),
+        title: String(a.title ?? '—'),
+        subject: String(a.subject ?? '—'),
+        topic: '—',
+        className: String(a.class_name ?? '—'),
+        teacher: '—',
+        due: dayMonthYear(typeof a.due_date === 'string' ? a.due_date : undefined),
+        marks: Number(a.max_marks ?? 0) || 0,
+        status
+      };
+    });
+  }, [assignmentsRes.data]);
+
+  const source = liveList ?? list;
+  const rows = filter === 'Needs grading'
+    ? source.filter((a) => a.status === 'Submitted' || a.status === 'In Progress')
+    : filter === 'Draft' ? [] : source;
   const submitted = SUBMISSIONS.filter((s) => s.status === 'Submitted').length;
   const graded = SUBMISSIONS.filter((s) => s.status === 'Graded').length;
 
@@ -31,8 +68,12 @@ export function TeacherAssignments() {
         } />
       
 
+      {live && assignmentsRes.error &&
+      <p className="text-sm text-rose-600">{assignmentsRes.error}</p>
+      }
+
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Stat label="Published" value={list.length} sub="This term" />
+        <Stat label="Published" value={source.length} sub="This term" />
         <Stat label="Awaiting grading" value={submitted} sub="Across 2 assignments" tone="gold" />
         <Stat label="Graded" value={graded} sub="Returned to learners" tone="primary" />
         <Stat label="Not submitted" value={SUBMISSIONS.filter((s) => s.status === 'Not Submitted').length} sub="Follow up with parents" tone="danger" />

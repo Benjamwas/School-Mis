@@ -1,15 +1,40 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRightIcon } from 'lucide-react';
 import { Badge, Button, Card, PageHeader, Progress } from '../../components/ui/primitives';
 import { Alert } from '../../components/ui/feedback';
 import { CLASSES } from '../../data/people';
 import { useApp } from '../../contexts/AppContext';
+import { useApiLive, useList } from '../../api/hooks';
+import type { ApiClass, ApiTeachingAssignment } from '../../api/types';
 
 export function TeacherClasses() {
   const { role } = useApp();
+  const live = useApiLive();
+  const classesRes = useList<ApiClass>('/schools/classes/');
+  const assignments = useList<ApiTeachingAssignment>('/subjects/teaching-assignments/');
   const isClassTeacher = role === 'classteacher';
   const classes = isClassTeacher ? CLASSES.slice(0, 1) : CLASSES.slice(0, 3);
+
+  const error = classesRes.error ?? assignments.error;
+
+  const liveClasses = useMemo(() => {
+    if (!classesRes.data) return null;
+    const mine = assignments.data ? new Set(assignments.data.map((a) => a.school_class)) : null;
+    const scoped = mine ? classesRes.data.filter((c) => mine.has(c.id)) : classesRes.data;
+    const teacherByClass = new Map((assignments.data ?? []).map((a) => [a.school_class, a.teacher_name]));
+    return scoped.map((c) => ({
+      id: c.id,
+      name: c.display_name || c.name,
+      teacher: teacherByClass.get(c.id) ?? '—',
+      learners: '—',
+      room: c.section || '—',
+      average: 0,
+      attendance: 0
+    }));
+  }, [classesRes.data, assignments.data]);
+
+  const rows = liveClasses ?? classes;
 
   return (
     <div>
@@ -18,6 +43,10 @@ export function TeacherClasses() {
         subtitle={isClassTeacher ? 'You are the class teacher for Grade 4 Acacia — full academic and pastoral access.' : 'You teach English to three classes. Access is limited to English data for these learners.'} />
       
 
+      {live && error &&
+      <p className="text-sm text-rose-600">{error}</p>
+      }
+
       {!isClassTeacher &&
       <div className="mb-6">
           <Alert tone="info" title="Restricted to your subject">Other subjects’ results, fee information and HR records are not visible in this view.</Alert>
@@ -25,7 +54,7 @@ export function TeacherClasses() {
       }
 
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-        {classes.map((c) =>
+        {rows.map((c) =>
         <Card key={c.id} className="p-5">
             <div className="flex items-start justify-between gap-3">
               <div>

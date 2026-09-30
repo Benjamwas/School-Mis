@@ -17,11 +17,11 @@ const BTN_BASE =
 'inline-flex items-center justify-center gap-2 font-medium rounded-lg transition-[background-color,color,border-color,box-shadow,transform] duration-150 ease-sala disabled:opacity-50 disabled:pointer-events-none active:scale-[0.985] whitespace-nowrap';
 
 const BTN_VARIANT: Record<string, string> = {
-  primary: 'bg-forest-700 text-white hover:bg-forest-800 shadow-sm',
-  secondary: 'bg-white text-forest-800 border border-line hover:border-forest-300 hover:bg-forest-50',
-  ghost: 'text-ink-muted hover:text-ink hover:bg-forest-50',
+  primary: 'bg-gold text-navy hover:bg-gold-dark shadow-sm font-semibold',
+  secondary: 'bg-white dark:bg-white/10 text-navy dark:text-white border border-surface-border dark:border-white/20 hover:border-gold hover:bg-gold-50 dark:hover:bg-white/15',
+  ghost: 'text-ink-muted dark:text-gray-400 hover:text-navy dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10',
   danger: 'bg-red-600 text-white hover:bg-red-700',
-  gold: 'bg-gold-400 text-forest-900 hover:bg-gold-300'
+  gold: 'bg-gold text-navy hover:bg-gold-dark font-semibold'
 };
 
 const BTN_SIZE: Record<string, string> = {
@@ -43,7 +43,7 @@ export function Button({ variant = 'primary', size = 'md', icon, full, className
 
 export function Card({ className, children, ...rest }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cx('bg-white border border-line rounded-card shadow-card', className)} {...rest}>
+    <div className={cx('bg-white dark:bg-white/5 border border-line dark:border-white/10 rounded-card shadow-card', className)} {...rest}>
       {children}
     </div>);
 
@@ -185,7 +185,7 @@ export function Field({ label, hint, required, children, className }: {label: st
 
 }
 
-const CONTROL = 'w-full h-11 rounded-lg border border-line bg-white px-3 text-sm text-ink placeholder:text-ink-soft focus:border-forest-500 focus:ring-2 focus:ring-forest-100 outline-none transition-colors duration-150';
+const CONTROL = 'w-full h-11 rounded-lg border border-line dark:border-white/20 bg-white dark:bg-white/5 px-3 text-sm text-ink dark:text-white placeholder:text-ink-soft dark:placeholder:text-gray-500 focus:border-gold focus:ring-2 focus:ring-gold/20 outline-none transition-colors duration-150';
 
 export function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return <input {...props} className={cx(CONTROL, props.className)} />;
@@ -214,8 +214,8 @@ export function PageHeader({ title, subtitle, actions }: {title: string;subtitle
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between mb-6">
       <div>
-        <h1 className="font-serif text-[26px] sm:text-[30px] leading-tight text-ink">{title}</h1>
-        {subtitle && <p className="text-sm text-ink-muted mt-1 max-w-2xl">{subtitle}</p>}
+        <h1 className="font-heading text-heading-xl heading-color leading-tight">{title}</h1>
+        {subtitle && <p className="text-sm text-ink-muted dark:text-gray-400 mt-1 max-w-2xl">{subtitle}</p>}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
     </div>);
@@ -225,9 +225,9 @@ export function PageHeader({ title, subtitle, actions }: {title: string;subtitle
 export function SectionTitle({ eyebrow, title, intro, center }: {eyebrow?: string;title: string;intro?: string;center?: boolean;}) {
   return (
     <div className={cx('max-w-2xl', center && 'mx-auto text-center')}>
-      {eyebrow && <p className="text-[13px] font-semibold text-gold-600 mb-2">{eyebrow}</p>}
-      <h2 className="font-serif text-[28px] sm:text-[36px] leading-[1.15] text-ink">{title}</h2>
-      {intro && <p className="mt-3 text-[15px] leading-relaxed text-ink-muted">{intro}</p>}
+      {eyebrow && <p className="text-[13px] font-semibold text-gold mb-2 uppercase tracking-wider">{eyebrow}</p>}
+      <h2 className="font-heading text-heading-lg heading-color leading-[1.15]">{title}</h2>
+      {intro && <p className="mt-3 text-[15px] leading-relaxed text-ink-muted dark:text-gray-400">{intro}</p>}
     </div>);
 
 }

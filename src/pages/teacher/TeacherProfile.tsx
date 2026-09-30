@@ -1,14 +1,47 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Avatar, Badge, Button, Card, CardHeader, Checkbox, Field, Input, PageHeader } from '../../components/ui/primitives';
 import { Alert } from '../../components/ui/feedback';
 import { TEACHERS } from '../../data/people';
 import { ROLE_LABELS } from '../../data/navigation';
 import { useApp } from '../../contexts/AppContext';
+import { useApiLive, useObject } from '../../api/hooks';
+import type { ApiUser } from '../../api/types';
+
+function titleCase(value: string): string {
+  if (!value) return '—';
+  return value.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function initialsOf(name: string): string {
+  return name
+    .split(' ')
+    .filter(Boolean)
+    .slice(-2)
+    .map((x) => x[0]?.toUpperCase() ?? '')
+    .join('');
+}
 
 export function TeacherProfile() {
   const { role, toast } = useApp();
-  const teacher = role === 'classteacher' ? TEACHERS[0] : TEACHERS[1];
+  const live = useApiLive();
+  const me = useObject<ApiUser>('/auth/me');
+  const mock = role === 'classteacher' ? TEACHERS[0] : TEACHERS[1];
+
+  const teacher = useMemo(() => {
+    if (!me.data) return mock;
+    const person = me.data.person;
+    const name = me.data.full_name || [person?.first_name, person?.last_name].filter(Boolean).join(' ') || mock.name;
+    return {
+      ...mock,
+      name,
+      email: me.data.email || person?.email || '—',
+      phone: person?.phone || '—',
+      status: titleCase(me.data.status || 'Active'),
+      staffNo: (person?.employee_number as string) || '—',
+      roleLabel: me.data.roles?.map((r) => titleCase(r)).join(', ') || ROLE_LABELS[role]
+    };
+  }, [me.data, mock, role]);
 
   return (
     <div>
@@ -18,12 +51,18 @@ export function TeacherProfile() {
         actions={<Button size="sm" onClick={() => toast({ tone: 'success', title: 'Profile saved' })}>Save changes</Button>} />
       
 
+      {live && me.error &&
+      <p className="text-sm text-rose-600">{me.error}</p>
+      }
+
       <div className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
         <div className="space-y-6">
           <Card className="p-5 text-center">
-            <Avatar initials={teacher.name.split(' ').slice(-2).map((x) => x[0]).join('')} size="lg" />
+            <Avatar initials={initialsOf(teacher.name)} size="lg" />
             <p className="mt-3 font-serif text-[21px] text-ink">{teacher.name}</p>
-            <p className="text-[13px] text-ink-muted">{ROLE_LABELS[role]}</p>
+            <p className="text-[13px] text-ink-muted">
+              {'roleLabel' in teacher ? (teacher.roleLabel as string) : ROLE_LABELS[role]}
+            </p>
             <div className="mt-3 flex flex-wrap justify-center gap-2">
               <Badge tone="success">{teacher.status}</Badge>
               <Badge tone="neutral">{teacher.staffNo}</Badge>

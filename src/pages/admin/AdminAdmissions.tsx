@@ -6,15 +6,67 @@ import { ConfirmDialog } from '../../components/ui/feedback';
 import { DataTable, FilterSelect, Tabs, Timeline } from '../../components/ui/data';
 import { APPLICATIONS, APPLICATION_TIMELINE, BOOKED_VISITS } from '../../data/crm';
 import { useApp } from '../../contexts/AppContext';
+import { useApiLive, useList, useObject } from '../../api/hooks';
 
 const TABS = ['Applications', 'Assessment schedule', 'School visits'];
+
+const STAGE_FILTERS = ['All stages', 'Under Review', 'Interview', 'Decision', 'Accepted', 'Enrolled'];
+
+const STAGE_LABEL: Record<string, string> = {
+  DRAFT: 'Draft',
+  SUBMITTED: 'Submitted',
+  UNDER_REVIEW: 'Under Review',
+  SHORTLISTED: 'Shortlisted',
+  INTERVIEW: 'Interview',
+  DECISION_PENDING: 'Decision',
+  ACCEPTED: 'Accepted',
+  REJECTED: 'Rejected',
+  WAITLISTED: 'Waitlisted',
+  ENROLLED: 'Enrolled',
+  WITHDRAWN: 'Withdrawn'
+};
+
+function stageOf(status?: string): string {
+  if (!status) return 'Draft';
+  return STAGE_LABEL[status] ?? status;
+}
+
+function fmtDate(value?: string | null): string {
+  if (!value) return '—';
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
 
 export function AdminAdmissions() {
   const [tab, setTab] = useState(TABS[0]);
   const [stage, setStage] = useState('All stages');
   const [reject, setReject] = useState<string | null>(null);
   const { toast } = useApp();
-  const rows = stage === 'All stages' ? APPLICATIONS : APPLICATIONS.filter((a) => a.stage === stage);
+
+  const live = useApiLive();
+  const applications = useList<Record<string, any>>('admissions/applications/');
+  const summary = useObject<{ status_counts?: Record<string, number> }>('admissions/applications/summary/');
+
+  const source: any[] = live
+    ? (applications.data ?? []).map((a) => ({
+      id: a.application_number || a.id,
+      child: a.applicant_name || '—',
+      parent: a.applicant_name || '—',
+      applyingClass: a.grade_level_name || '—',
+      submitted: fmtDate(a.submitted_at),
+      stage: stageOf(a.status),
+      status: stageOf(a.status)
+    }))
+    : APPLICATIONS;
+
+  const rows = stage === 'All stages' ? source : source.filter((a) => a.stage === stage);
+
+  const counts = summary.data?.status_counts ?? {};
+  const total = counts.TOTAL ?? 0;
+  const awaiting = (counts.SUBMITTED ?? 0) + (counts.UNDER_REVIEW ?? 0) + (counts.SHORTLISTED ?? 0)
+    + (counts.INTERVIEW ?? 0) + (counts.DECISION_PENDING ?? 0);
+  const accepted = (counts.ACCEPTED ?? 0) + (counts.ENROLLED ?? 0);
 
   return (
     <div>
@@ -31,9 +83,9 @@ export function AdminAdmissions() {
       
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Stat label="Applications received" value="24" sub="This intake" tone="primary" />
-        <Stat label="Awaiting decision" value="5" sub="2 past the 10-day window" tone="gold" />
-        <Stat label="Offers accepted" value="11" sub="9 fully enrolled" />
+        <Stat label="Applications received" value={live ? total : '24'} sub="This intake" tone="primary" />
+        <Stat label="Awaiting decision" value={live ? awaiting : '5'} sub="2 past the 10-day window" tone="gold" />
+        <Stat label="Offers accepted" value={live ? accepted : '11'} sub="9 fully enrolled" />
         <Stat label="Visits booked" value={BOOKED_VISITS.length} sub="Next: 24 Sep, 10:00am" icon={<CalendarCheckIcon size={16} />} />
       </div>
 
@@ -41,13 +93,17 @@ export function AdminAdmissions() {
         <Tabs tabs={TABS} active={tab} onChange={setTab} />
       </div>
 
+      {live && (applications.error ?? summary.error) &&
+      <p className="mb-4 text-sm text-rose-600">{applications.error ?? summary.error}</p>
+      }
+
       {tab === 'Applications' &&
       <div className="grid gap-6 lg:grid-cols-[1.4fr_0.6fr]">
           <Card>
             <CardHeader
             title={`${rows.length} applications`}
             subtitle="January 2027 intake"
-            action={<FilterSelect label="Stage" value={stage} onChange={setStage} options={['All stages', 'Under Review', 'Interview', 'Decision', 'Accepted', 'Enrolled']} />} />
+            action={<FilterSelect label="Stage" value={stage} onChange={setStage} options={STAGE_FILTERS} />} />
           
             <DataTable
             columns={[

@@ -8,16 +8,98 @@ import { ASSIGNMENTS, ATTENDANCE_SUMMARY, CLASS_SUBJECT_AVERAGES, SUBJECT_SCORES
 import { FEE_SUMMARY, PAYMENTS, formatKES } from '../../data/finance';
 import { GUARDIANS, STUDENTS, TEACHERS } from '../../data/people';
 import { useApp } from '../../contexts/AppContext';
+import { useApiLive, useDetail, useObject } from '../../api/hooks';
+import type { ApiStudent } from '../../api/types';
 
 const TABS = ['Overview', 'Academics', 'Attendance', 'Fees', 'Documents', 'Parents'];
 
+const STUDENT_STATUS: Record<string, string> = {
+  ACTIVE: 'Active',
+  ALUMNI: 'Alumni',
+  ARCHIVED: 'Alumni',
+  TRANSFERRED: 'Alumni'
+};
+
+function studentStatus(status?: string): string {
+  if (!status) return 'On Leave';
+  return STUDENT_STATUS[status] ?? 'On Leave';
+}
+
+function initialsOf(name: string): string {
+  return name.split(' ').filter(Boolean).slice(0, 2).map((part) => part[0].toUpperCase()).join('');
+}
+
+function fmtDate(value?: string | null): string {
+  if (!value) return '—';
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+const EMPTY_STUDENT = {
+  id: '',
+  name: '—',
+  admissionNo: '',
+  className: '',
+  stream: '',
+  age: '' as number | '',
+  gender: '',
+  avatarInitials: '',
+  parentId: '',
+  status: 'On Leave'
+};
+
 export function AdminStudentProfile() {
   const { id = 's1' } = useParams();
-  const student = STUDENTS.find((s) => s.id === id) ?? STUDENTS[0];
-  const guardian = GUARDIANS.find((g) => g.id === student.parentId) ?? GUARDIANS[0];
   const [tab, setTab] = useState(TABS[0]);
   const [remove, setRemove] = useState(false);
   const { toast } = useApp();
+
+  const live = useApiLive();
+  const record = useDetail<ApiStudent>('students/', id);
+  const attendance = useObject<Record<string, number>>(`students/${id}/attendance/`);
+  const academic = useObject<Record<string, any>>(`students/${id}/academic_summary/`);
+
+  const student: any = live
+    ? (record.data ? {
+      id: record.data.id,
+      name: record.data.full_name || record.data.person?.full_name || '—',
+      admissionNo: record.data.admission_number || '',
+      className: (record.data.current_class_name as string) || '',
+      stream: '',
+      age: '',
+      gender: record.data.person?.gender || '—',
+      avatarInitials: initialsOf(record.data.full_name || record.data.person?.full_name || ''),
+      parentId: '',
+      status: studentStatus(record.data.status)
+    } : EMPTY_STUDENT)
+    : STUDENTS.find((s) => s.id === id) ?? STUDENTS[0];
+
+  const guardian = GUARDIANS.find((g) => g.id === student.parentId) ?? GUARDIANS[0];
+
+  const attendanceTotals = attendance.data ?? null;
+  const attendanceSummary = attendanceTotals
+    ? {
+      present: attendanceTotals.PRESENT ?? 0,
+      absent: attendanceTotals.ABSENT ?? 0,
+      late: attendanceTotals.LATE ?? 0,
+      percentage: Math.round(
+        ((attendanceTotals.PRESENT ?? 0) / Math.max(attendanceTotals.total ?? 0, 1)) * 100
+      )
+    }
+    : ATTENDANCE_SUMMARY;
+
+  const results: any[] = live && academic.data
+    ? ((academic.data.subject_performance ?? []) as Record<string, any>[]).map((r) => ({
+      subject: r.subject,
+      score: r.total_score,
+      grade: r.grade,
+      teacher: '—',
+      comment: r.term ? `${r.term} result` : ''
+    }))
+    : SUBJECT_SCORES;
+
+  const resultsError = record.error ?? attendance.error ?? academic.error;
 
   return (
     <div>
@@ -47,6 +129,10 @@ export function AdminStudentProfile() {
         } />
       
 
+      {live && resultsError &&
+      <p className="mb-4 text-sm text-rose-600">{resultsError}</p>
+      }
+
       <div className="mb-6">
         <Tabs tabs={TABS} active={tab} onChange={setTab} />
       </div>
@@ -70,10 +156,10 @@ export function AdminStudentProfile() {
               </div>
               <dl className="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-4 border-t border-line pt-4">
                 {[
-              ['Term average', '75%'],
-              ['Attendance', `${ATTENDANCE_SUMMARY.percentage}%`],
+              ['Term average', live && academic.data?.overall_performance != null ? `${academic.data.overall_performance}%` : '75%'],
+              ['Attendance', live && attendanceTotals ? `${attendanceSummary.percentage}%` : `${ATTENDANCE_SUMMARY.percentage}%`],
               ['Fee balance', formatKES(FEE_SUMMARY.balance)],
-              ['Enrolled since', 'Jan 2021']].
+              ['Enrolled since', live && record.data?.admission_date ? fmtDate(record.data.admission_date) : 'Jan 2021']].
               map(([k, v]) =>
               <div key={k}>
                     <dt className="text-[12px] text-ink-muted">{k}</dt>
@@ -87,10 +173,10 @@ export function AdminStudentProfile() {
               <CardHeader title="Administrative details" />
               <div className="p-5 grid sm:grid-cols-2 gap-5">
                 <Field label="Admission number">
-                  <Input readOnly defaultValue={student.admissionNo} />
+                  <Input key={student.admissionNo} readOnly defaultValue={student.admissionNo} />
                 </Field>
                 <Field label="Class">
-                  <Select defaultValue={`${student.className} ${student.stream}`}>
+                  <Select key={`${student.className} ${student.stream}`} defaultValue={`${student.className} ${student.stream}`}>
                     <option>{`${student.className} ${student.stream}`}</option>
                     <option>Grade 5 Acacia</option>
                   </Select>
@@ -152,7 +238,9 @@ export function AdminStudentProfile() {
           
           </ChartFrame>
           <Card>
-            <CardHeader title="Results — Term 3 2026" />
+            <CardHeader title={live && academic.data?.current_term?.name
+              ? `Results — ${academic.data.current_term.name}`
+              : 'Results — Term 3 2026'} />
             <DataTable
             columns={[
             { key: 'subject', header: 'Subject', render: (r: any) => <span className="font-medium">{r.subject}</span> },
@@ -161,7 +249,7 @@ export function AdminStudentProfile() {
             { key: 'teacher', header: 'Teacher', hideOnMobile: true },
             { key: 'comment', header: 'Comment', hideOnMobile: true }]
             }
-            rows={SUBJECT_SCORES}
+            rows={results}
             caption="Results" />
           
           </Card>
@@ -186,10 +274,10 @@ export function AdminStudentProfile() {
           <CardHeader title="Attendance record" subtitle="Term 3 · 2026" />
           <div className="p-5 grid sm:grid-cols-4 gap-4">
             {[
-          ['Rate', `${ATTENDANCE_SUMMARY.percentage}%`],
-          ['Present', ATTENDANCE_SUMMARY.present],
-          ['Absent', ATTENDANCE_SUMMARY.absent],
-          ['Late', ATTENDANCE_SUMMARY.late]].
+          ['Rate', `${attendanceSummary.percentage}%`],
+          ['Present', attendanceSummary.present],
+          ['Absent', attendanceSummary.absent],
+          ['Late', attendanceSummary.late]].
           map(([k, v]) =>
           <div key={k as string} className="rounded-lg bg-cream p-4">
                 <p className="text-[12.5px] text-ink-muted">{k}</p>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { DownloadIcon, LogInIcon, LogOutIcon, PlusIcon, PrinterIcon } from 'lucide-react';
 import { Badge, Button, Card, CardHeader, Field, Input, PageHeader, Select, Stat, StatusBadge, Textarea } from '../../components/ui/primitives';
@@ -7,22 +7,88 @@ import { DataTable, Tabs } from '../../components/ui/data';
 import { ATTENDANCE_LOG, DUTY_ROSTER, HR_TICKETS, LEAVE_BALANCES, LEAVE_REQUESTS, MY_ATTENDANCE, PAYSLIP, PAYSLIP_HISTORY } from '../../data/hr';
 import { formatKES } from '../../data/finance';
 import { useApp } from '../../contexts/AppContext';
+import { useApiLive, useList } from '../../api/hooks';
 
 const TABS = ['My attendance', 'Leave', 'Payslips', 'Duty roster', 'HR tickets'];
+
+function titleCase(value: string): string {
+  if (!value) return '—';
+  return value.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function dayMonthYear(value?: unknown): string {
+  if (typeof value !== 'string' || !value) return '—';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return value;
+  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function clockTime(value?: unknown): string {
+  if (typeof value !== 'string' || !value) return '—';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return value;
+  return d.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' });
+}
+
+function hoursBetween(clockIn?: unknown, clockOut?: unknown): string {
+  if (typeof clockIn !== 'string' || typeof clockOut !== 'string' || !clockIn || !clockOut) return '—';
+  const start = new Date(clockIn).getTime();
+  const end = new Date(clockOut).getTime();
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return '—';
+  const mins = Math.round((end - start) / 60000);
+  return `${Math.floor(mins / 60)}h ${String(mins % 60).padStart(2, '0')}m`;
+}
 
 export function TeacherHR() {
   const { tab = 'My attendance' } = useParams();
   const navigate = useNavigate();
   const { role, toast } = useApp();
+  const live = useApiLive();
+  const attendanceRes = useList<Record<string, unknown>>('/attendance/hr/me/');
+  const leaveRes = useList<Record<string, unknown>>('/hr/leave-requests/me/');
   const [clockedIn, setClockedIn] = useState(true);
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [ticketOpen, setTicketOpen] = useState(false);
 
   const tabs = role === 'subjectteacher' ? TABS.slice(0, 3) : TABS;
 
+  const liveAttendance = useMemo(() => {
+    if (!attendanceRes.data) return null;
+    return attendanceRes.data.map((a) => ({
+      date: dayMonthYear(a.attendance_date),
+      in: clockTime(a.clock_in),
+      out: clockTime(a.clock_out),
+      hours: hoursBetween(a.clock_in, a.clock_out),
+      status: titleCase(String(a.status ?? ''))
+    }));
+  }, [attendanceRes.data]);
+
+  const liveLeave = useMemo(() => {
+    if (!leaveRes.data) return null;
+    return leaveRes.data.map((l) => ({
+      id: String(l.id ?? ''),
+      type: titleCase(String(l.leave_type_name ?? l.leave_type ?? '')),
+      from: dayMonthYear(l.start_date),
+      to: dayMonthYear(l.end_date),
+      days: Number(l.days ?? 0) || 0,
+      reason: String(l.reason ?? '—'),
+      status: titleCase(String(l.status ?? '')),
+      applied: dayMonthYear(l.created_at),
+      staff: String(l.employee_name ?? '—')
+    }));
+  }, [leaveRes.data]);
+
+  const error = tab === 'Leave' ? leaveRes.error : tab === 'My attendance' ? attendanceRes.error : null;
+  const attendanceRows = liveAttendance ?? ATTENDANCE_LOG;
+  const leaveRows = liveLeave ?? LEAVE_REQUESTS;
+
   return (
     <div>
       <PageHeader title="My HR" subtitle="Your attendance, leave, pay and support requests. Only your own records are visible here." />
+
+      {live && error &&
+      <p className="text-sm text-rose-600">{error}</p>
+      }
 
       <div className="mb-6">
         <Tabs tabs={tabs} active={tab} onChange={(t) => navigate(`/teacher/hr/${t}`)} />
@@ -69,7 +135,7 @@ export function TeacherHR() {
             { key: 'hours', header: 'Hours', align: 'right', hideOnMobile: true },
             { key: 'status', header: 'Status', render: (r: any) => <StatusBadge status={r.status} /> }]
             }
-            rows={ATTENDANCE_LOG}
+            rows={attendanceRows}
             caption="My attendance history" />
           
           </Card>
@@ -111,7 +177,7 @@ export function TeacherHR() {
             { key: 'reason', header: 'Reason', hideOnMobile: true },
             { key: 'status', header: 'Status', render: (r: any) => <StatusBadge status={r.status} /> }]
             }
-            rows={LEAVE_REQUESTS}
+            rows={leaveRows}
             caption="My leave requests" />
           
           </Card>

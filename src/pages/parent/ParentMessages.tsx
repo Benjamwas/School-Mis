@@ -1,9 +1,24 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { SendIcon } from 'lucide-react';
 import { Avatar, Button, Card, CardHeader, PageHeader, Textarea, cx } from '../../components/ui/primitives';
 import { useApp } from '../../contexts/AppContext';
+import { useApiLive, useList } from '../../api/hooks';
+import { useObject } from '../../api/hooks';
+import { api } from '../../api/client';
+import type { ApiNotification } from '../../api/types';
 
-const THREADS = [
+interface MessageThread {
+  id: string;
+  with: string;
+  role: string;
+  initials: string;
+  last: string;
+  when: string;
+  unread: boolean;
+  messages: {from: 'them' | 'me';text: string;when: string;}[];
+}
+
+const THREADS: MessageThread[] = [
 {
   id: 'th1',
   with: 'Mr. Brian Kimani',
@@ -21,15 +36,68 @@ const THREADS = [
 { id: 'th2', with: 'Ms. Lydia Achieng', role: 'English · Grade 4 Acacia', initials: 'LA', last: 'She read to the class beautifully today.', when: '2d', unread: false, messages: [{ from: 'them', text: 'Just a quick note — Wanjiru read to the class today and handled the inference questions confidently. A real change from last term.', when: 'Wed, 1:20pm' }] },
 { id: 'th3', with: 'School Office', role: 'Administration', initials: 'SO', last: 'Consultation Day booking opens Monday 8am.', when: '4d', unread: false, messages: [{ from: 'them', text: 'Parent–Teacher Consultation Day is on 26 September. Booking opens Monday at 8:00am in the portal. Slots are 15 minutes per subject.', when: 'Mon, 9:00am' }] }];
 
+const EMPTY_THREAD: MessageThread = {
+  id: 'empty',
+  with: 'No messages',
+  role: 'School notifications',
+  initials: '—',
+  last: '',
+  when: '—',
+  unread: false,
+  messages: [],
+};
+
+function notificationDate(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat('en-KE', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }).format(date);
+}
+
+function notificationInitials(value: string): string {
+  return value.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join('') || 'SN';
+}
+
+function notificationRole(value?: string): string {
+  if (!value) return 'School notification';
+  return value.toLowerCase().replace(/_/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
 
 export function ParentMessages() {
+  const live = useApiLive();
+  const notifications = useList<ApiNotification>('notifications/');
+  const parent = useObject<{ id: string }>('/parents/me');
+  const children = useList<{ student: string }>(parent.data?.id ? `/parents/${parent.data.id}/children/` : '/parents/me/children/');
+  const liveThreads: MessageThread[] = (notifications.data ?? []).map((n) => ({
+    id: n.id,
+    with: n.title,
+    role: notificationRole(n.type),
+    initials: notificationInitials(n.title),
+    last: n.body ?? '',
+    when: notificationDate(n.created_at),
+    unread: !n.is_read,
+    messages: [{ from: 'them', text: n.body ?? 'No message body provided.', when: notificationDate(n.created_at) }],
+  }));
+  const threads = live ? liveThreads : THREADS;
   const [active, setActive] = useState(THREADS[0].id);
   const [draft, setDraft] = useState('');
-  const thread = THREADS.find((t) => t.id === active)!;
+  const thread = threads.find((t) => t.id === active) ?? threads[0] ?? EMPTY_THREAD;
   const { toast } = useApp();
 
-  const send = () => {
+  const send = async () => {
     if (!draft.trim()) return;
+    if (live) {
+      const studentId = children.data?.[0]?.student;
+      if (!studentId) {
+        toast({ tone: 'warning', title: 'No linked child found' });
+        return;
+      }
+      try {
+        await api.post('/notifications/send_message/', { student_id: studentId, body: draft.trim() });
+      } catch (error) {
+        toast({ tone: 'warning', title: 'Message could not be sent', body: error instanceof Error ? error.message : 'Please try again.' });
+        return;
+      }
+    }
     setDraft('');
     toast({ tone: 'success', title: 'Message sent', body: `${thread.with} usually replies within one school day.` });
   };
@@ -38,14 +106,16 @@ export function ParentMessages() {
     <div>
       <PageHeader title="Messages" subtitle="Conversations with your children’s teachers and the school office." />
 
+      {live && notifications.error && <p className="text-sm text-rose-600">{notifications.error}</p>}
+
       <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
         <Card className="overflow-hidden h-max">
           <CardHeader title="Conversations" subtitle="3 threads" />
           <ul className="divide-y divide-line">
-            {THREADS.map((t) =>
+            {threads.map((t) =>
             <li key={t.id}>
                 <button
-                onClick={() => setActive(t.id)}
+                onClick={() => { setActive(t.id); if (live) void api.post(`/notifications/${t.id}/read/`); }}
                 className={cx('w-full text-left px-4 py-3.5 flex gap-3 transition-colors duration-150', active === t.id ? 'bg-forest-50/70' : 'hover:bg-cream')}>
                 
                   <Avatar initials={t.initials} size="sm" />
