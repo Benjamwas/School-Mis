@@ -1,13 +1,20 @@
 {
-  "name": "magic-patterns-vite-template",
-  "version": "0.0.1",
+  "name": "vendramini-schools",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "npx vite",
+    "dev": "concurrently -n client,server -c blue,green \"npm run dev:client\" \"npm run dev:server\"",
+    "dev:client": "npx vite",
+    "dev:server": "npm --prefix server run dev",
     "build": "npx vite build",
+    "start": "npm run build && npm run server",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
-    "preview": "npx vite preview"
+    "typecheck": "tsc --noEmit",
+    "preview": "npx vite preview",
+    "seed": "npm --prefix server run seed",
+    "server": "npm --prefix server start",
+    "ci": "npm install --legacy-peer-deps && npm run build"
   },
   "dependencies": {
     "axios": "^1.13.2",
@@ -21,6 +28,7 @@
     "styled-components": "^6.1.19"
   },
   "devDependencies": {
+    "@types/leaflet": "^1.9.12",
     "@types/node": "^20.11.18",
     "@types/react": "^18.3.1",
     "@types/react-dom": "^18.3.1",
@@ -29,6 +37,7 @@
     "@typescript-eslint/parser": "^5.54.0",
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "latest",
+    "concurrently": "^9.0.0",
     "eslint": "^8.50.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.1",

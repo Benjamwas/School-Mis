@@ -1,0 +1,79 @@
+name: Real-Time Build and Deploy
+
+on:
+  push:
+    branches:
+      - main  # Triggers the live build instantly when you push to main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Fetch the latest code from your repository
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # 2. Set up the build environment (Node.js)
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # 3. Install dependencies and run the production build in GitHub
+      #    --legacy-peer-deps: react-simple-chatbot expects styled-components v4
+      #    while this project uses v6 (existing app constraint)
+      - name: Install & Build Application
+        run: |
+          npm install --legacy-peer-deps
+          npm run build  # Generates production files in ./dist
+
+      # 4. Verify the build output before deploy
+      - name: Verify Build Output
+        run: |
+          test -f dist/index.html
+          test -d dist/assets
+          test -f dist/.htaccess
+          echo "Build OK — $(du -sh dist | cut -f1)"
+
+      # 5. Instantly deploy the compiled build folder to your live domain
+      - name: Sync Build to cPanel Live Domain
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: "rs9.rcnoc.com"
+          username: "oasisofl"
+          password: ${{ secrets.FTP_PASSWORD }}
+          # This is the Vite production output folder
+          local-dir: ./dist/
+          # This maps directly to your live public domain path
+          server-dir: ./public_html/
+          # Keeps your server clean by removing files deleted in the latest build
+          dangerous-clean-html: false
+          # Do not delete images folder during sync (large assets live there)
+          exclude: |
+            **/.DS_Store
+            **/*.map
+
+      # 6. Deploy the API server code (Express + SQLite) for cPanel Node.js
+      #    Configure cPanel > Setup Node.js App to run: node index.js
+      #    App root on server should point to: /home/oasisofl/vendramini-api
+      - name: Sync API Server to cPanel
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: "rs9.rcnoc.com"
+          username: "oasisofl"
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./server/
+          server-dir: ./vendramini-api/
+          dangerous-clean-html: false
+          exclude: |
+            **/node_modules/**
+            **/data/**
+            **/.env
+            **/.env.*
+            **/*.db
+            **/*.db-wal
+            **/*.db-shm
+            **/uploads/**
+            **/.DS_Store

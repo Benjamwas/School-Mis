@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import HeroSection from '../components/sections/HeroSection';
 import CampusesOverview from '../components/sections/CampusesOverview';
 import EventsSection from '../components/sections/EventsSection';
