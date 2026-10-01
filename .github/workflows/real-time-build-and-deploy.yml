@@ -4,60 +4,115 @@ on:
   push:
     branches:
       - main  # Triggers the live build instantly when you push to main
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  build-and-deploy:
+  # -------------------------------------------------------
+  # Job 1: Build + Test (must pass before deploy)
+  # -------------------------------------------------------
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Fetch the latest code from your repository
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # 2. Set up the build environment (Node.js)
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
 
-      # 3. Install dependencies and run the production build in GitHub
-      #    --legacy-peer-deps: react-simple-chatbot expects styled-components v4
-      #    while this project uses v6 (existing app constraint)
-      - name: Install & Build Application
-        run: |
-          npm install --legacy-peer-deps
-          npm run build  # Generates production files in ./dist
+      - name: Install frontend dependencies
+        # --legacy-peer-deps: react-simple-chatbot expects styled-components v4
+        run: npm install --legacy-peer-deps
 
-      # 4. Verify the build output before deploy
-      - name: Verify Build Output
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Verify build output
         run: |
           test -f dist/index.html
           test -d dist/assets
           test -f dist/.htaccess
           echo "Build OK — $(du -sh dist | cut -f1)"
 
-      # 5. Instantly deploy the compiled build folder to your live domain
+      - name: Install API server dependencies
+        working-directory: server
+        run: |
+          npm install
+          npm rebuild better-sqlite3 || true
+
+      - name: API smoke tests
+        run: bash server/smoke-test.sh
+
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: dist/
+          retention-days: 7
+
+      - name: Upload server artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-server
+          path: server/
+          retention-days: 7
+          # Do not ship local runtime junk
+          # (upload-artifact includes all files under path; excludes via if-no-files + gitignore-like filters below)
+
+  # -------------------------------------------------------
+  # Job 2: Deploy (only after build-and-test succeeds)
+  # Runs only on push to main, not on PRs
+  # -------------------------------------------------------
+  deploy:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install & Build Application
+        run: |
+          npm install --legacy-peer-deps
+          npm run build
+
+      - name: Verify build output
+        run: |
+          test -f dist/index.html
+          test -f dist/.htaccess
+          test -d dist/assets
+
       - name: Sync Build to cPanel Live Domain
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: "rs9.rcnoc.com"
           username: "oasisofl"
           password: ${{ secrets.FTP_PASSWORD }}
-          # This is the Vite production output folder
           local-dir: ./dist/
-          # This maps directly to your live public domain path
           server-dir: ./public_html/
-          # Keeps your server clean by removing files deleted in the latest build
           dangerous-clean-html: false
-          # Do not delete images folder during sync (large assets live there)
           exclude: |
             **/.DS_Store
             **/*.map
 
-      # 6. Deploy the API server code (Express + SQLite) for cPanel Node.js
-      #    Configure cPanel > Setup Node.js App to run: node index.js
-      #    App root on server should point to: /home/oasisofl/vendramini-api
       - name: Sync API Server to cPanel
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -72,8 +127,10 @@ jobs:
             **/data/**
             **/.env
             **/.env.*
+            **/.env.smoke
             **/*.db
             **/*.db-wal
             **/*.db-shm
             **/uploads/**
+            **/*.log
             **/.DS_Store

@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node index.js",
     "dev": "node --watch index.js",
-    "seed": "node seed.js"
+    "seed": "node seed.js",
+    "test": "bash smoke-test.sh"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

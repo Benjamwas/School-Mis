@@ -21,6 +21,9 @@ dist-ssr
 server/data/
 server/uploads/
 server/.env
+server/.env.*
+server/smoke-server.log
+.smoke-data/
 *.db
 *.db-wal
 *.db-shm
