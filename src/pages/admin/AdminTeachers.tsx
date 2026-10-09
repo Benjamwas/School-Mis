@@ -67,7 +67,7 @@ export function AdminTeachers() {
       setShowForm(false);
       employees.refresh();
     } catch (e: any) {
-      toast({ tone: 'danger', title: 'Add failed', body: e?.message || 'Try again.' });
+      toast({ tone: 'error', title: 'Add failed', body: e?.message || 'Try again.' });
     } finally {
       setBusy(false);
     }
@@ -82,7 +82,7 @@ export function AdminTeachers() {
       setDelId(null);
       employees.refresh();
     } catch (e: any) {
-      toast({ tone: 'danger', title: 'Remove failed', body: e?.message || 'Try again.' });
+      toast({ tone: 'error', title: 'Remove failed', body: e?.message || 'Try again.' });
     } finally {
       setBusy(false);
     }

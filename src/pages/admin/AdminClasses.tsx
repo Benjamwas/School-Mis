@@ -73,7 +73,7 @@ export function AdminClasses() {
       setShowForm(false);
       classes.refresh();
     } catch (e: any) {
-      toast({ tone: 'danger', title: 'Save failed', body: e?.message || 'Try again.' });
+      toast({ tone: 'error', title: 'Save failed', body: e?.message || 'Try again.' });
     } finally {
       setBusy(false);
     }
@@ -88,7 +88,7 @@ export function AdminClasses() {
       setDelId(null);
       classes.refresh();
     } catch (e: any) {
-      toast({ tone: 'danger', title: 'Delete failed', body: e?.message || 'Try again.' });
+      toast({ tone: 'error', title: 'Delete failed', body: e?.message || 'Try again.' });
     } finally {
       setBusy(false);
     }

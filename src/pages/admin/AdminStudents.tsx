@@ -54,7 +54,7 @@ export function AdminStudents() {
         name,
         admissionNo: s.admission_number || '',
         className: s.current_class_name || (s.current_class ? classNames.get(s.current_class) ?? '' : ''),
-        gender: s.person?.gender || '—',
+        gender: s.person?.gender === 'MALE' ? 'Male' : s.person?.gender === 'FEMALE' ? 'Female' : s.person?.gender || '—',
         avatarInitials: initialsOf(name),
         status: studentStatus(s.status)
       };
@@ -98,7 +98,7 @@ export function AdminStudents() {
       setForm({ first_name: '', last_name: '', admission_number: '', gender: '', date_of_birth: '', phone: '', email: '' });
       students.refresh();
     } catch (e: any) {
-      toast({ tone: 'danger', title: 'Could not add student', body: e?.message || 'Try again.' });
+      toast({ tone: 'error', title: 'Could not add student', body: e?.message || 'Try again.' });
     } finally {
       setBusy(false);
     }
@@ -113,7 +113,7 @@ export function AdminStudents() {
       setDelId(null);
       students.refresh();
     } catch (e: any) {
-      toast({ tone: 'danger', title: 'Could not remove student', body: e?.message || 'Try again.' });
+      toast({ tone: 'error', title: 'Could not remove student', body: e?.message || 'Try again.' });
     } finally {
       setBusy(false);
     }
@@ -226,8 +226,8 @@ export function AdminStudents() {
           <Field label="Gender">
             <Select value={form.gender} onChange={(e) => setForm({ ...form, gender: e.target.value })}>
               <option value="">—</option>
-              <option value="F">Female</option>
-              <option value="M">Male</option>
+              <option value="FEMALE">Female</option>
+              <option value="MALE">Male</option>
             </Select>
           </Field>
           <Field label="Date of birth">

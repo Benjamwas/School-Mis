@@ -216,6 +216,12 @@ export function PortalShell() {
   const { role, sessionMode, user: apiUser, toasts, dismiss, logout } = useApp();
   const [drawer, setDrawer] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  // Force dark theme on the whole document while inside the portal
+  useEffect(() => {
+    document.documentElement.classList.add('dark');
+    return () => document.documentElement.classList.remove('dark');
+  }, []);
   const navigate = useNavigate();
   const mobile = MOBILE_NAV[role];
   const identity = (sessionMode === 'api' && apiUser ? apiIdentity(apiUser) : null) ?? ROLE_USERS[role];

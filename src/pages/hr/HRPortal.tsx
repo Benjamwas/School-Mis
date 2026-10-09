@@ -115,7 +115,7 @@ export function HRPortal() {
       setStaffForm({ first_name: '', last_name: '', employee_number: '', role_title: '', phone: '', email: '', employment_status: 'ACTIVE' });
       employees.refresh();
     } catch (e: any) {
-      toast({ tone: 'danger', title: 'Add failed', body: e?.message || 'Try again.' });
+      toast({ tone: 'error', title: 'Add failed', body: e?.message || 'Try again.' });
     } finally {
       setStaffBusy(false);
     }
@@ -130,7 +130,7 @@ export function HRPortal() {
       setDelStaffId(null);
       employees.refresh();
     } catch (e: any) {
-      toast({ tone: 'danger', title: 'Remove failed', body: e?.message || 'Try again.' });
+      toast({ tone: 'error', title: 'Remove failed', body: e?.message || 'Try again.' });
     } finally {
       setDelBusy(false);
     }

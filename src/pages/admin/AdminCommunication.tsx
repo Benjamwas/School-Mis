@@ -101,7 +101,7 @@ export function AdminCommunication() {
       announcements.refresh();
       notifications.refresh();
     } catch (e: any) {
-      toast({ tone: 'danger', title: 'Send failed', body: e?.message || 'Try again.' });
+      toast({ tone: 'error', title: 'Send failed', body: e?.message || 'Try again.' });
     } finally {
       setBusy(false);
     }

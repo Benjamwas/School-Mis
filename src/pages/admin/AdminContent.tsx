@@ -121,7 +121,7 @@ export function AdminContent() {
       setShowEvent(false);
       events.refresh();
     } catch (e: any) {
-      toast({ tone: 'danger', title: 'Save failed', body: e?.message || 'Try again.' });
+      toast({ tone: 'error', title: 'Save failed', body: e?.message || 'Try again.' });
     } finally {
       setEventBusy(false);
     }
@@ -136,7 +136,7 @@ export function AdminContent() {
       setDelEventId(null);
       events.refresh();
     } catch (e: any) {
-      toast({ tone: 'danger', title: 'Delete failed', body: e?.message || 'Try again.' });
+      toast({ tone: 'error', title: 'Delete failed', body: e?.message || 'Try again.' });
     } finally {
       setEventBusy(false);
     }
@@ -169,7 +169,7 @@ export function AdminContent() {
       setShowAlbum(false);
       albums.refresh();
     } catch (e: any) {
-      toast({ tone: 'danger', title: 'Save failed', body: e?.message || 'Try again.' });
+      toast({ tone: 'error', title: 'Save failed', body: e?.message || 'Try again.' });
     } finally {
       setAlbumBusy(false);
     }
@@ -181,7 +181,7 @@ export function AdminContent() {
       toast({ tone: 'success', title: next === 'PUBLISHED' ? 'Album published' : 'Album unpublished' });
       albums.refresh();
     } catch (e: any) {
-      toast({ tone: 'danger', title: 'Update failed', body: e?.message || 'Try again.' });
+      toast({ tone: 'error', title: 'Update failed', body: e?.message || 'Try again.' });
     }
   };
 
@@ -194,7 +194,7 @@ export function AdminContent() {
       setDelAlbumId(null);
       albums.refresh();
     } catch (e: any) {
-      toast({ tone: 'danger', title: 'Delete failed', body: e?.message || 'Try again.' });
+      toast({ tone: 'error', title: 'Delete failed', body: e?.message || 'Try again.' });
     } finally {
       setAlbumBusy(false);
     }
@@ -242,7 +242,7 @@ export function AdminContent() {
       setShowPost(false);
       posts.refresh();
     } catch (e: any) {
-      toast({ tone: 'danger', title: 'Save failed', body: e?.message || 'Try again.' });
+      toast({ tone: 'error', title: 'Save failed', body: e?.message || 'Try again.' });
     } finally {
       setPostBusy(false);
     }
@@ -254,7 +254,7 @@ export function AdminContent() {
       toast({ tone: 'success', title: next === 'PUBLISHED' ? 'Article published' : 'Article unpublished' });
       posts.refresh();
     } catch (e: any) {
-      toast({ tone: 'danger', title: 'Update failed', body: e?.message || 'Try again.' });
+      toast({ tone: 'error', title: 'Update failed', body: e?.message || 'Try again.' });
     }
   };
 
@@ -267,7 +267,7 @@ export function AdminContent() {
       setDelPostId(null);
       posts.refresh();
     } catch (e: any) {
-      toast({ tone: 'danger', title: 'Delete failed', body: e?.message || 'Try again.' });
+      toast({ tone: 'error', title: 'Delete failed', body: e?.message || 'Try again.' });
     } finally {
       setPostBusy(false);
     }

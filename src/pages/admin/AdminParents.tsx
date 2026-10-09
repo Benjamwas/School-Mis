@@ -72,7 +72,7 @@ export function AdminParents() {
       setShowForm(false);
       parents.refresh();
     } catch (e: any) {
-      toast({ tone: 'danger', title: editId ? 'Update failed' : 'Add failed', body: e?.message || 'Try again.' });
+      toast({ tone: 'error', title: editId ? 'Update failed' : 'Add failed', body: e?.message || 'Try again.' });
     } finally {
       setBusy(false);
     }
@@ -87,7 +87,7 @@ export function AdminParents() {
       setDelId(null);
       parents.refresh();
     } catch (e: any) {
-      toast({ tone: 'danger', title: 'Delete failed', body: e?.message || 'Try again.' });
+      toast({ tone: 'error', title: 'Delete failed', body: e?.message || 'Try again.' });
     } finally {
       setBusy(false);
     }

@@ -392,7 +392,7 @@ export function AdminStudentProfile() {
             await api.delete(`students/${student.id}/`);
             toast({ tone: 'success', title: 'Student archived', body: `${student.name} has been moved to archived records.` });
           } catch (e: any) {
-            toast({ tone: 'danger', title: 'Archive failed', body: e?.message || 'Try again.' });
+            toast({ tone: 'error', title: 'Archive failed', body: e?.message || 'Try again.' });
           }
         }}
         title={`Delete ${student.name}?`}

@@ -127,7 +127,7 @@ export function FinancePortal() {
       payments.refresh();
       fin.refresh();
     } catch (e: any) {
-      toast({ tone: 'danger', title: 'Payment failed', body: e?.message || 'Try again.' });
+      toast({ tone: 'error', title: 'Payment failed', body: e?.message || 'Try again.' });
     } finally {
       setPayBusy(false);
     }
@@ -143,7 +143,7 @@ export function FinancePortal() {
       payments.refresh();
       fin.refresh();
     } catch (e: any) {
-      toast({ tone: 'danger', title: 'Refund failed', body: e?.message || 'Try again.' });
+      toast({ tone: 'error', title: 'Refund failed', body: e?.message || 'Try again.' });
     } finally {
       setRefundBusy(false);
     }

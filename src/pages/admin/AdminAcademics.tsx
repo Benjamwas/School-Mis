@@ -62,7 +62,7 @@ export function AdminAcademics() {
       setShowForm(false);
       subjects.refresh();
     } catch (e: any) {
-      toast({ tone: 'danger', title: 'Save failed', body: e?.message || 'Try again.' });
+      toast({ tone: 'error', title: 'Save failed', body: e?.message || 'Try again.' });
     } finally {
       setBusy(false);
     }
@@ -77,7 +77,7 @@ export function AdminAcademics() {
       setDelId(null);
       subjects.refresh();
     } catch (e: any) {
-      toast({ tone: 'danger', title: 'Delete failed', body: e?.message || 'Try again.' });
+      toast({ tone: 'error', title: 'Delete failed', body: e?.message || 'Try again.' });
     } finally {
       setBusy(false);
     }

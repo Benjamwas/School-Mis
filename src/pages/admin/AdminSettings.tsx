@@ -97,7 +97,7 @@ export function AdminSettings() {
       }
       toast({ tone: 'success', title: 'Profile saved', body: live ? 'School profile updated in the database.' : 'Saved locally (demo mode).' });
     } catch (e: any) {
-      toast({ tone: 'danger', title: 'Save failed', body: e?.message || 'Try again.' });
+      toast({ tone: 'error', title: 'Save failed', body: e?.message || 'Try again.' });
     } finally {
       setSaving(false);
     }
@@ -141,7 +141,7 @@ export function AdminSettings() {
       }
       toast({ tone: 'success', title: 'Settings saved', body: live ? 'All changes persisted to the database.' : 'Saved locally (demo mode).' });
     } catch (e: any) {
-      toast({ tone: 'danger', title: 'Save failed', body: e?.message || 'Try again.' });
+      toast({ tone: 'error', title: 'Save failed', body: e?.message || 'Try again.' });
     } finally {
       setSaving(false);
     }
