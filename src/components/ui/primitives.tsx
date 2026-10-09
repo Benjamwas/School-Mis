@@ -79,7 +79,7 @@ const TONE: Record<StatusTone, string> = {
   danger: 'bg-red-50 text-red-700 border-red-200',
   info: 'bg-sky-50 text-sky-700 border-sky-200',
   neutral: 'bg-cream text-ink-muted border-line',
-  pending: 'bg-amber-50 text-amber-700 border-amber-200'
+  pending: 'bg-amber-50 text-amber-800 border-amber-200'
 };
 
 export function Badge({ tone = 'neutral', children, className }: {tone?: StatusTone;children: React.ReactNode;className?: string;}) {

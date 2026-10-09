@@ -876,3 +876,31 @@ section :is(.glass-card) :is(button, .btn) {
 .portal-content [class*="bg-cream"] {
   background-color: rgba(255, 255, 255, 0.08) !important;
 }
+
+/* PORTAL badges — readable on navy */
+.portal-content .bg-forest-50,
+.portal-content .bg-amber-50,
+.portal-content .bg-red-50,
+.portal-content .bg-sky-50,
+.portal-content .bg-gold-50,
+.portal-content .bg-cream {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.portal-content .border-forest-200,
+.portal-content .border-amber-200,
+.portal-content .border-red-200,
+.portal-content .border-sky-200,
+.portal-content .border-gold-200,
+.portal-content .border-line {
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.portal-content .text-forest-700,
+.portal-content .text-forest-800 { color: #6EE7B7 !important; }
+.portal-content .text-amber-700,
+.portal-content .text-amber-800 { color: #FCD34D !important; }
+.portal-content .text-red-700 { color: #FCA5A5 !important; }
+.portal-content .text-sky-700,
+.portal-content .text-sky-800 { color: #7DD3FC !important; }
+.portal-content .text-gold-600 { color: #F4C243 !important; }
