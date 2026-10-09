@@ -524,3 +524,58 @@ export function mapRole(codes: string[]): Role | null {
   }
   return null;
 }
+
+export interface ApiTimetableSlot {
+  id: string;
+  school: string;
+  school_class: string;
+  class_name?: string;
+  period: string;
+  period_name?: string;
+  teaching_assignment?: string | null;
+  subject_name?: string;
+  teacher_name?: string;
+  day_of_week: string;
+  day_display?: string;
+  room?: string;
+  status: string;
+  [k: string]: unknown;
+}
+
+export interface ApiMedicalRecord {
+  id: string;
+  school: string;
+  student: string;
+  student_name?: string;
+  record_date: string;
+  height_cm?: string | null;
+  weight_kg?: string | null;
+  bmi?: number | null;
+  blood_group?: string;
+  vision?: string;
+  hearing?: string;
+  general_condition?: string;
+  allergies?: string;
+  chronic_conditions?: string;
+  medications?: string;
+  physical_exam_notes?: string;
+  examined_by?: string;
+  next_checkup_date?: string | null;
+  status: string;
+  [k: string]: unknown;
+}
+
+export interface ApiAssessment {
+  id: string;
+  school: string;
+  teaching_assignment: string;
+  term: string;
+  title: string;
+  assessment_type: string;
+  max_score: string;
+  date?: string;
+  status: string;
+  subject?: string;
+  class_name?: string;
+  [k: string]: unknown;
+}

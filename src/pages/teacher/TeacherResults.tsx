@@ -5,6 +5,7 @@ import { BarChartBlock, ChartFrame, DataTable, FilterSelect, LineChartBlock, Tab
 import { CLASS_SUBJECT_AVERAGES, SUBJECT_SCORES, TERM_TREND } from '../../data/academics';
 import { STUDENTS } from '../../data/people';
 import { useApp } from '../../contexts/AppContext';
+import { api } from '../../api/client';
 import { useApiLive, useList } from '../../api/hooks';
 
 const TABS = ['Assessments', 'Class results', 'Analysis'];
@@ -57,6 +58,55 @@ export function TeacherResults() {
     }));
   }, [results.data]);
 
+  const publishResults = async () => {
+    if (!live) {
+      toast({ tone: 'success', title: 'Results published', body: 'Parents can now see Term 3 results in the Parent Portal.' });
+      return;
+    }
+    try {
+      const ids = (results.data ?? []).filter((r: any) => r.status === 'DRAFT' || r.status === 'SUBMITTED').map((r: any) => r.id);
+      if (!ids.length) {
+        toast({ tone: 'warning', title: 'No draft results', body: 'All results are already published.' });
+        return;
+      }
+      await api.post('subjects/results/publish/', { result_ids: ids });
+      toast({ tone: 'success', title: 'Results published', body: `${ids.length} result(s) published. Parents can now see them in the portal.` });
+      results.refresh();
+    } catch (e: any) {
+      toast({ tone: 'error', title: 'Publish failed', body: e?.message || 'Try again.' });
+    }
+  };
+
+  const generateResults = async () => {
+    if (!live) {
+      toast({ tone: 'success', title: 'Results generated', body: 'Draft results created from assessment scores.' });
+      return;
+    }
+    try {
+      await api.post('subjects/results/generate/', {});
+      toast({ tone: 'success', title: 'Results generated', body: 'Draft results aggregated from assessment scores and quizzes.' });
+      results.refresh();
+    } catch (e: any) {
+      toast({ tone: 'error', title: 'Generate failed', body: e?.message || 'Try again.' });
+    }
+  };
+
+  const exportResults = () => {
+    const rows = (liveResults ?? insight).map((r) => ({
+      Student: r.student, Subject: r.subject, Score: r.score, Grade: r.grade, Status: r.status
+    }));
+    if (!rows.length) return;
+    const headers = Object.keys(rows[0]);
+    const csv = [headers.join(','), ...rows.map((r) => headers.map((h) => `"${String(r[h as keyof typeof r] ?? '').replace(/"/g, '""')}"`).join(','))].join('\n');
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'results.csv';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast({ tone: 'success', title: 'Export ready', body: 'Results CSV downloaded.' });
+  };
+
   const insight = liveResults ?? SUBJECT_SCORES.map((s) => ({
     id: s.subject,
     subject: s.subject,
@@ -78,10 +128,13 @@ export function TeacherResults() {
         actions={
         <>
             <FilterSelect label="Term" value={term} onChange={setTerm} options={['Term 3 · 2026', 'Term 2 · 2026', 'Term 1 · 2026']} />
-            <Button size="sm" variant="secondary" icon={<DownloadIcon size={15} />}>
-              Export
+            <Button size="sm" variant="secondary" icon={<DownloadIcon size={15} />} onClick={exportResults}>
+              Export CSV
             </Button>
-            <Button size="sm" icon={<SendIcon size={15} />} onClick={() => toast({ tone: 'success', title: 'Results published', body: 'Parents can now see Term 3 results in the Parent Portal.' })}>
+            <Button size="sm" variant="secondary" onClick={generateResults}>
+              Auto-generate from scores
+            </Button>
+            <Button size="sm" icon={<SendIcon size={15} />} onClick={publishResults}>
               Publish results
             </Button>
           </>

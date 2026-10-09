@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { FileTextIcon, MessageSquareIcon, PencilIcon, Trash2Icon } from 'lucide-react';
-import { Avatar, Badge, Button, Card, CardHeader, Field, Input, PageHeader, Select, StatusBadge } from '../../components/ui/primitives';
+import { Avatar, Badge, Button, Card, CardHeader, Field, Input, PageHeader, Select, StatusBadge, Textarea } from '../../components/ui/primitives';
 import { ConfirmDialog } from '../../components/ui/feedback';
 import { BarChartBlock, ChartFrame, DataTable, Tabs } from '../../components/ui/data';
 import { ASSIGNMENTS, ATTENDANCE_SUMMARY, CLASS_SUBJECT_AVERAGES, SUBJECT_SCORES } from '../../data/academics';
@@ -9,10 +9,11 @@ import { FEE_SUMMARY, PAYMENTS, formatKES } from '../../data/finance';
 import { GUARDIANS, STUDENTS, TEACHERS } from '../../data/people';
 import { useApp } from '../../contexts/AppContext';
 import { api } from '../../api/client';
-import { useApiLive, useDetail, useObject } from '../../api/hooks';
+import { useApiLive, useDetail, useList, useObject } from '../../api/hooks';
+import { Modal } from '../../components/ui/feedback';
 import type { ApiStudent } from '../../api/types';
 
-const TABS = ['Overview', 'Academics', 'Attendance', 'Fees', 'Documents', 'Parents'];
+const TABS = ['Overview', 'Academics', 'Attendance', 'Medical', 'Fees', 'Documents', 'Parents'];
 
 const STUDENT_STATUS: Record<string, string> = {
   ACTIVE: 'Active',
@@ -60,6 +61,14 @@ export function AdminStudentProfile() {
   const record = useDetail<ApiStudent>('students/', id);
   const attendance = useObject<Record<string, number>>(`students/${id}/attendance/`);
   const academic = useObject<Record<string, any>>(`students/${id}/academic_summary/`);
+  const medical = useList<Record<string, any>>(`medical-records/?student=${id}`);
+  const [showExam, setShowExam] = useState(false);
+  const [examBusy, setExamBusy] = useState(false);
+  const [exam, setExam] = useState({
+    height_cm: '', weight_kg: '', blood_group: '', vision: '', hearing: '',
+    general_condition: 'Good', allergies: '', chronic_conditions: '', medications: '',
+    physical_exam_notes: '', examined_by: '', next_checkup_date: ''
+  });
 
   const student: any = live
     ? (record.data ? {
@@ -101,6 +110,54 @@ export function AdminStudentProfile() {
     : SUBJECT_SCORES;
 
   const resultsError = record.error ?? attendance.error ?? academic.error;
+
+  const saveExam = async () => {
+    if (!exam.height_cm || !exam.weight_kg) {
+      toast({ tone: 'warning', title: 'Missing fields', body: 'Height and weight are required.' });
+      return;
+    }
+    setExamBusy(true);
+    try {
+      await api.post('medical-records/', {
+        student: record.data?.id ?? id,
+        record_date: new Date().toISOString().slice(0, 10),
+        height_cm: Number(exam.height_cm),
+        weight_kg: Number(exam.weight_kg),
+        blood_group: exam.blood_group || undefined,
+        vision: exam.vision || undefined,
+        hearing: exam.hearing || undefined,
+        general_condition: exam.general_condition || undefined,
+        allergies: exam.allergies || undefined,
+        chronic_conditions: exam.chronic_conditions || undefined,
+        medications: exam.medications || undefined,
+        physical_exam_notes: exam.physical_exam_notes || undefined,
+        examined_by: exam.examined_by || undefined,
+        next_checkup_date: exam.next_checkup_date || undefined,
+        status: 'FINAL'
+      });
+      toast({ tone: 'success', title: 'Examination recorded', body: 'Physical examination saved to the student record.' });
+      setShowExam(false);
+      medical.refresh();
+    } catch (e: any) {
+      toast({ tone: 'error', title: 'Save failed', body: e?.message || 'Try again.' });
+    } finally {
+      setExamBusy(false);
+    }
+  };
+
+  const medicalRows = (medical.data ?? []).map((m: any) => ({
+    id: m.id,
+    date: m.record_date,
+    height: m.height_cm ? `${m.height_cm} cm` : '—',
+    weight: m.weight_kg ? `${m.weight_kg} kg` : '—',
+    bmi: m.bmi ?? '—',
+    blood: m.blood_group || '—',
+    vision: m.vision || '—',
+    condition: m.general_condition || '—',
+    allergies: m.allergies || '—',
+    next: m.next_checkup_date || '—'
+  }));
+  const latestExam = medicalRows[0];
 
   return (
     <div>
@@ -303,6 +360,112 @@ export function AdminStudentProfile() {
         
         </Card>
       }
+
+      {tab === 'Medical' && (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-[16px] font-semibold text-ink dark:text-white">Physical examination records</h3>
+              <p className="text-[13px] text-ink-muted dark:text-gray-400">Height, weight, BMI, vision and health notes</p>
+            </div>
+            <Button size="sm" onClick={() => setShowExam(true)}>Record examination</Button>
+          </div>
+
+          {latestExam && (
+            <Card className="p-6">
+              <div className="grid sm:grid-cols-4 gap-4">
+                <div>
+                  <p className="text-[12px] uppercase tracking-wide text-ink-muted dark:text-gray-400">Height</p>
+                  <p className="text-[20px] font-semibold text-ink dark:text-white mt-1">{latestExam.height}</p>
+                </div>
+                <div>
+                  <p className="text-[12px] uppercase tracking-wide text-ink-muted dark:text-gray-400">Weight</p>
+                  <p className="text-[20px] font-semibold text-ink dark:text-white mt-1">{latestExam.weight}</p>
+                </div>
+                <div>
+                  <p className="text-[12px] uppercase tracking-wide text-ink-muted dark:text-gray-400">BMI</p>
+                  <p className="text-[20px] font-semibold text-ink dark:text-white mt-1">{latestExam.bmi}</p>
+                </div>
+                <div>
+                  <p className="text-[12px] uppercase tracking-wide text-ink-muted dark:text-gray-400">Blood group</p>
+                  <p className="text-[20px] font-semibold text-ink dark:text-white mt-1">{latestExam.blood}</p>
+                </div>
+              </div>
+              <div className="mt-4 pt-4 border-t border-surface-border dark:border-white/10 grid sm:grid-cols-2 gap-4 text-[13px]">
+                <p><span className="font-medium text-ink dark:text-white">Vision:</span> <span className="text-ink-muted dark:text-gray-400">{latestExam.vision}</span></p>
+                <p><span className="font-medium text-ink dark:text-white">Condition:</span> <span className="text-ink-muted dark:text-gray-400">{latestExam.condition}</span></p>
+                <p><span className="font-medium text-ink dark:text-white">Allergies:</span> <span className="text-ink-muted dark:text-gray-400">{latestExam.allergies}</span></p>
+                <p><span className="font-medium text-ink dark:text-white">Next checkup:</span> <span className="text-ink-muted dark:text-gray-400">{latestExam.next}</span></p>
+              </div>
+            </Card>
+          )}
+
+          <Card>
+            <CardHeader title={`${medicalRows.length} examination record${medicalRows.length === 1 ? '' : 's'}`} />
+            <DataTable
+              columns={[
+                { key: 'date', header: 'Date' },
+                { key: 'height', header: 'Height' },
+                { key: 'weight', header: 'Weight' },
+                { key: 'bmi', header: 'BMI' },
+                { key: 'blood', header: 'Blood', hideOnMobile: true },
+                { key: 'vision', header: 'Vision', hideOnMobile: true },
+                { key: 'condition', header: 'Condition', hideOnMobile: true }
+              ]}
+              rows={medicalRows}
+              mobileTitle={(r: any) => `${r.date} — ${r.condition}`}
+              caption="Medical records" />
+          </Card>
+
+          <Modal open={showExam} onClose={() => setShowExam(false)} title="Record physical examination" size="lg">
+            <div className="grid sm:grid-cols-2 gap-4">
+              <Field label="Height (cm)" required>
+                <Input type="number" step="0.1" value={exam.height_cm} onChange={(e) => setExam({ ...exam, height_cm: e.target.value })} placeholder="145.5" />
+              </Field>
+              <Field label="Weight (kg)" required>
+                <Input type="number" step="0.1" value={exam.weight_kg} onChange={(e) => setExam({ ...exam, weight_kg: e.target.value })} placeholder="38.2" />
+              </Field>
+              <Field label="Blood group">
+                <Select value={exam.blood_group} onChange={(e) => setExam({ ...exam, blood_group: e.target.value })}>
+                  <option value="">—</option>
+                  {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map((b) => <option key={b}>{b}</option>)}
+                </Select>
+              </Field>
+              <Field label="Vision">
+                <Input value={exam.vision} onChange={(e) => setExam({ ...exam, vision: e.target.value })} placeholder="6/6 — Normal" />
+              </Field>
+              <Field label="Hearing">
+                <Input value={exam.hearing} onChange={(e) => setExam({ ...exam, hearing: e.target.value })} placeholder="Normal" />
+              </Field>
+              <Field label="General condition">
+                <Input value={exam.general_condition} onChange={(e) => setExam({ ...exam, general_condition: e.target.value })} placeholder="Good" />
+              </Field>
+              <Field label="Allergies" className="sm:col-span-2">
+                <Input value={exam.allergies} onChange={(e) => setExam({ ...exam, allergies: e.target.value })} placeholder="None known" />
+              </Field>
+              <Field label="Chronic conditions" className="sm:col-span-2">
+                <Input value={exam.chronic_conditions} onChange={(e) => setExam({ ...exam, chronic_conditions: e.target.value })} />
+              </Field>
+              <Field label="Medications" className="sm:col-span-2">
+                <Input value={exam.medications} onChange={(e) => setExam({ ...exam, medications: e.target.value })} />
+              </Field>
+              <Field label="Physical exam notes" className="sm:col-span-2">
+                <Textarea value={exam.physical_exam_notes} onChange={(e) => setExam({ ...exam, physical_exam_notes: e.target.value })} rows={3} />
+              </Field>
+              <Field label="Examined by">
+                <Input value={exam.examined_by} onChange={(e) => setExam({ ...exam, examined_by: e.target.value })} placeholder="Dr. …" />
+              </Field>
+              <Field label="Next checkup date">
+                <Input type="date" value={exam.next_checkup_date} onChange={(e) => setExam({ ...exam, next_checkup_date: e.target.value })} />
+              </Field>
+            </div>
+            <div className="mt-5 flex justify-end gap-2">
+              <Button variant="secondary" size="sm" onClick={() => setShowExam(false)}>Cancel</Button>
+              <Button size="sm" disabled={examBusy} onClick={saveExam}>{examBusy ? 'Saving…' : 'Record examination'}</Button>
+            </div>
+          </Modal>
+        </div>
+      )}
 
       {tab === 'Fees' &&
       <div className="space-y-6">
