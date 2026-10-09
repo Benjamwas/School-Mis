@@ -701,3 +701,147 @@ section :is(.glass-card) :is(button, .btn) {
 .site-header-scrim {
   background: linear-gradient(180deg, rgba(21, 40, 71, 0.75) 0%, rgba(21, 40, 71, 0.35) 55%, rgba(21, 40, 71, 0) 100%);
 }
+
+
+/* ============================================
+   PORTAL — fixed navy theme, white readable text
+   No light/dark toggle in dashboard
+   ============================================ */
+
+.portal-content {
+  color: #F3F4F6;
+}
+
+.portal-content h1,
+.portal-content h2,
+.portal-content h3,
+.portal-content h4,
+.portal-content h5,
+.portal-content h6,
+.portal-content .heading-color,
+.portal-content .font-heading,
+.portal-content .font-display {
+  color: #FFFFFF !important;
+}
+
+.portal-content p,
+.portal-content li,
+.portal-content dd,
+.portal-content dt,
+.portal-content label,
+.portal-content span:not(.text-gold):not(.text-white):not([class*="text-white"]):not([class*="text-navy"]):not([class*="bg-gold"]):not(.badge) {
+  color: rgba(243, 244, 246, 0.88);
+}
+
+.portal-content .text-ink,
+.portal-content .text-ink-muted,
+.portal-content .text-ink-soft,
+.portal-content .text-gray-400,
+.portal-content .text-gray-500,
+.portal-content .text-gray-600 {
+  color: rgba(243, 244, 246, 0.82) !important;
+}
+
+.portal-content .text-white {
+  color: #FFFFFF !important;
+}
+
+.portal-content .text-gold {
+  color: #F4C243 !important;
+}
+
+/* Cards & panels on navy */
+.portal-content .bg-white,
+.portal-content .bg-card,
+.portal-content .glass-card,
+.portal-content [class*="bg-white"],
+.portal-content [class*="bg-card"] {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #F3F4F6;
+}
+
+.portal-content .bg-white\/90,
+.portal-content .bg-white\/95 {
+  background-color: rgba(21, 40, 71, 0.92) !important;
+}
+
+/* Borders */
+.portal-content .border-line,
+.portal-content .border-surface-border,
+.portal-content [class*="border-surface"] {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.portal-content .divide-line > * + *,
+.portal-content .divide-surface-border > * + * {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Form controls */
+.portal-content input,
+.portal-content select,
+.portal-content textarea {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  color: #FFFFFF !important;
+}
+
+.portal-content input::placeholder,
+.portal-content textarea::placeholder {
+  color: rgba(255, 255, 255, 0.4) !important;
+}
+
+.portal-content input:focus,
+.portal-content select:focus,
+.portal-content textarea:focus {
+  border-color: #F4C243 !important;
+  box-shadow: 0 0 0 3px rgba(244, 194, 67, 0.2) !important;
+}
+
+.portal-content select option {
+  background-color: #152847;
+  color: #FFFFFF;
+}
+
+/* Tables */
+.portal-content table th {
+  color: rgba(243, 244, 246, 0.7) !important;
+  background-color: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.portal-content table td {
+  color: #F3F4F6 !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+.portal-content tbody tr:hover td,
+.portal-content tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+/* Buttons secondary/ghost readable on navy */
+.portal-content button.bg-white,
+.portal-content .bg-white.text-navy-deep,
+.portal-content a.bg-white {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: #FFFFFF !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.portal-content button.bg-white:hover,
+.portal-content a.bg-white:hover {
+  background-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+/* Empty states / muted helper text */
+.portal-content .text-ink-soft {
+  color: rgba(243, 244, 246, 0.65) !important;
+}
+
+/* Search / filter pills */
+.portal-content .bg-cream,
+.portal-content [class*="bg-cream"] {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}

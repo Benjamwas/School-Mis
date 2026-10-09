@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { LogOutIcon, MenuIcon, XIcon, ChevronDownIcon, SunIcon, MoonIcon } from 'lucide-react';
+import { LogOutIcon, MenuIcon, XIcon, ChevronDownIcon } from 'lucide-react';
 import { Avatar, cx } from '../ui/primitives';
 import { Icon, SalaMark } from '../ui/icons';
 import { GlobalSearch, NotificationBell, RoleSwitcher, SearchTrigger } from './PortalWidgets';
@@ -24,11 +24,10 @@ function apiIdentity(user: ApiUser): PortalIdentity {
   return { name, initials, context: ROLE_LABELS[mapRole(user.roles ?? []) ?? 'visitor'] };
 }
 
-// Roles that use sidebar layout
 const SIDEBAR_ROLES = ['admin', 'hr', 'finance', 'superadmin'];
 
 function SidebarContent({ onNavigate, collapsed }: { onNavigate?: () => void; collapsed?: boolean; }) {
-  const { role, sessionMode, user, darkMode, toggleDarkMode } = useApp();
+  const { role, sessionMode, user } = useApp();
   const groups = ROLE_NAV[role];
   const identity = (sessionMode === 'api' && user ? apiIdentity(user) : null) ?? ROLE_USERS[role];
 
@@ -38,11 +37,11 @@ function SidebarContent({ onNavigate, collapsed }: { onNavigate?: () => void; co
         'flex items-center border-b border-white/10 shrink-0 transition-all duration-300',
         collapsed ? 'justify-center px-2 h-16' : 'gap-2.5 px-4 h-16'
       )}>
-        <SalaMark tone="white" className={cx('text-[13px] shrink-0', collapsed ? 'h-9 w-9' : 'h-9 w-9')} />
+        <SalaMark tone="white" className={cx('text-[13px] shrink-0 h-9 w-9')} />
         {!collapsed && (
           <div className="min-w-0">
             <p className="text-[13.5px] font-semibold text-white leading-tight">St. Ann Lifred</p>
-            <p className="text-[11.5px] text-gray-400 truncate">{ROLE_LABELS[role]}</p>
+            <p className="text-[11.5px] text-gray-300 truncate">{ROLE_LABELS[role]}</p>
           </div>
         )}
       </div>
@@ -51,7 +50,7 @@ function SidebarContent({ onNavigate, collapsed }: { onNavigate?: () => void; co
         {groups.map((g) => (
           <div key={g.title}>
             {!collapsed && (
-              <p className="px-2.5 mb-1.5 text-[10.5px] font-semibold uppercase tracking-[0.08em] text-gray-500">{g.title}</p>
+              <p className="px-2.5 mb-1.5 text-[10.5px] font-semibold uppercase tracking-[0.08em] text-gray-400">{g.title}</p>
             )}
             <ul className="space-y-0.5">
               {g.links.map((l) => (
@@ -63,9 +62,9 @@ function SidebarContent({ onNavigate, collapsed }: { onNavigate?: () => void; co
                     className={({ isActive }) => cx(
                       'flex items-center gap-2.5 rounded-lg transition-all duration-150',
                       collapsed ? 'justify-center px-2 py-2.5' : 'px-2.5 py-2 text-[13.5px]',
-                      isActive 
-                        ? 'bg-gold/15 text-gold font-medium' 
-                        : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                      isActive
+                        ? 'bg-gold/20 text-gold font-semibold'
+                        : 'text-gray-300 hover:bg-white/8 hover:text-white'
                     )}
                     title={collapsed ? l.label : undefined}
                   >
@@ -98,7 +97,7 @@ function SidebarContent({ onNavigate, collapsed }: { onNavigate?: () => void; co
 }
 
 function HorizontalNavbar() {
-  const { role, sessionMode, user: apiUser, darkMode, toggleDarkMode, logout } = useApp();
+  const { role, sessionMode, user: apiUser, logout } = useApp();
   const navigate = useNavigate();
   const groups = ROLE_NAV[role];
   const identity = (sessionMode === 'api' && apiUser ? apiIdentity(apiUser) : null) ?? ROLE_USERS[role];
@@ -111,18 +110,16 @@ function HorizontalNavbar() {
   }, []);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-40 bg-white dark:bg-navy-900 border-b border-surface-border dark:border-white/10 shadow-sm">
+    <header className="fixed top-0 left-0 right-0 z-40 bg-navy-900 border-b border-white/10 shadow-[0_4px_24px_rgba(10,15,28,0.35)]">
       <div className="flex items-center h-16 px-4 sm:px-6">
-        {/* Logo */}
         <Link to="/" className="flex items-center gap-2.5 mr-8">
-          <SalaMark className="h-9 w-9 text-[13px]" />
+          <SalaMark tone="white" className="h-9 w-9 text-[13px]" />
           <span className="hidden sm:block leading-tight">
-            <span className="block font-heading text-[13px] font-bold text-navy dark:text-white">ST. ANN LIFRED</span>
+            <span className="block font-heading text-[13px] font-bold text-white">ST. ANN LIFRED</span>
             <span className="block text-[9px] uppercase tracking-[0.15em] text-gold font-semibold">Academy</span>
           </span>
         </Link>
 
-        {/* Navigation Links */}
         <nav className="hidden md:flex items-center gap-1 flex-1" aria-label="Portal navigation">
           {groups.map((g) => (
             <div key={g.title} className="relative">
@@ -132,9 +129,9 @@ function HorizontalNavbar() {
                   end={g.links[0].end}
                   className={({ isActive }) => cx(
                     'px-3 py-2 text-[13px] font-medium rounded-lg transition-colors duration-150',
-                    isActive 
-                      ? 'text-gold bg-gold/10' 
-                      : 'text-ink-muted dark:text-gray-400 hover:text-navy dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5'
+                    isActive
+                      ? 'text-gold bg-gold/15'
+                      : 'text-gray-300 hover:text-white hover:bg-white/10'
                   )}
                 >
                   {g.links[0].label}
@@ -149,14 +146,14 @@ function HorizontalNavbar() {
                     className={cx(
                       'flex items-center gap-1 px-3 py-2 text-[13px] font-medium rounded-lg transition-colors duration-150',
                       openDropdown === g.title
-                        ? 'text-gold bg-gold/10'
-                        : 'text-ink-muted dark:text-gray-400 hover:text-navy dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5'
+                        ? 'text-gold bg-gold/15'
+                        : 'text-gray-300 hover:text-white hover:bg-white/10'
                     )}
                   >
                     {g.title}
                     <ChevronDownIcon size={14} className={cx('transition-transform duration-200', openDropdown === g.title && 'rotate-180')} />
                   </button>
-                  
+
                   <AnimatePresence>
                     {openDropdown === g.title && (
                       <motion.div
@@ -164,7 +161,7 @@ function HorizontalNavbar() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -10, scale: 0.95 }}
                         transition={{ duration: 0.15 }}
-                        className="absolute top-full left-0 mt-1 w-56 bg-white dark:bg-navy-800 rounded-xl shadow-pop border border-surface-border dark:border-white/10 py-2 overflow-hidden"
+                        className="absolute top-full left-0 mt-1 w-56 bg-navy-800 rounded-xl shadow-pop border border-white/10 py-2 overflow-hidden"
                         onClick={(e) => e.stopPropagation()}
                       >
                         {g.links.map((l) => (
@@ -175,9 +172,9 @@ function HorizontalNavbar() {
                             onClick={() => setOpenDropdown(null)}
                             className={({ isActive }) => cx(
                               'flex items-center gap-2.5 px-4 py-2.5 text-[13px] transition-colors duration-150',
-                              isActive 
-                                ? 'text-gold bg-gold/10 font-medium' 
-                                : 'text-ink dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-navy dark:hover:text-white'
+                              isActive
+                                ? 'text-gold bg-gold/10 font-medium'
+                                : 'text-gray-300 hover:bg-white/8 hover:text-white'
                             )}
                           >
                             <Icon name={l.icon} size={16} className="shrink-0" />
@@ -193,32 +190,21 @@ function HorizontalNavbar() {
           ))}
         </nav>
 
-        {/* Right side actions */}
         <div className="flex items-center gap-2">
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={toggleDarkMode}
-            className="h-9 w-9 rounded-full bg-gray-100 dark:bg-white/10 flex items-center justify-center text-ink-muted dark:text-gray-400 hover:text-gold dark:hover:text-gold transition-colors duration-300"
-            aria-label="Toggle dark mode"
-          >
-            {darkMode ? <SunIcon size={16} /> : <MoonIcon size={16} />}
-          </motion.button>
-
           {sessionMode === 'demo' && <RoleSwitcher />}
           <NotificationBell />
-          
+
           <button
             onClick={() => { logout(); navigate('/'); }}
-            className="hidden sm:grid h-9 w-9 place-items-center rounded-lg border border-surface-border dark:border-white/20 bg-white dark:bg-white/5 text-ink-muted dark:text-gray-400 hover:text-ink dark:hover:text-white hover:border-gold transition-colors duration-150"
+            className="hidden sm:grid h-9 w-9 place-items-center rounded-lg border border-white/15 bg-white/5 text-gray-300 hover:text-white hover:border-gold transition-colors duration-150"
             aria-label="Sign out"
           >
             <LogOutIcon size={16} />
           </button>
-          
-          <span className="hidden lg:flex items-center gap-2 pl-2 ml-1 border-l border-surface-border dark:border-white/10">
+
+          <span className="hidden lg:flex items-center gap-2 pl-2 ml-1 border-l border-white/10">
             <Avatar initials={identity.initials} size="sm" />
-            <span className="text-[13px] font-medium text-ink dark:text-white max-w-[10rem] truncate">{identity.name}</span>
+            <span className="text-[13px] font-medium text-white max-w-[10rem] truncate">{identity.name}</span>
           </span>
         </div>
       </div>
@@ -227,7 +213,7 @@ function HorizontalNavbar() {
 }
 
 export function PortalShell() {
-  const { role, sessionMode, user: apiUser, toasts, dismiss, logout, darkMode, toggleDarkMode } = useApp();
+  const { role, sessionMode, user: apiUser, toasts, dismiss, logout } = useApp();
   const [drawer, setDrawer] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const navigate = useNavigate();
@@ -236,10 +222,9 @@ export function PortalShell() {
   const useSidebar = SIDEBAR_ROLES.includes(role);
 
   return (
-    <div className="min-h-full w-full bg-white dark:bg-navy-dark transition-colors duration-300">
+    <div className="min-h-full w-full bg-navy-dark text-white">
       {useSidebar ? (
         <>
-          {/* Desktop sidebar */}
           <aside className={cx(
             'hidden lg:flex fixed inset-y-0 left-0 z-30 transition-all duration-300',
             sidebarCollapsed ? 'w-[72px]' : 'w-64'
@@ -249,11 +234,10 @@ export function PortalShell() {
             </div>
           </aside>
 
-          {/* Mobile drawer */}
           <AnimatePresence>
             {drawer && (
               <div className="lg:hidden fixed inset-0 z-50">
-                <motion.div className="absolute inset-0 bg-black/50" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} onClick={() => setDrawer(false)} />
+                <motion.div className="absolute inset-0 bg-black/60" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} onClick={() => setDrawer(false)} />
                 <motion.div
                   initial={{ x: -280 }}
                   animate={{ x: 0 }}
@@ -261,7 +245,7 @@ export function PortalShell() {
                   transition={{ duration: 0.24, ease: [0.23, 1, 0.32, 1] }}
                   className="absolute inset-y-0 left-0 w-[17rem] bg-gradient-to-b from-navy-900 to-navy-dark"
                 >
-                  <button onClick={() => setDrawer(false)} aria-label="Close menu" className="absolute right-3 top-4 h-8 w-8 grid place-items-center rounded-lg text-gray-400 hover:bg-white/10">
+                  <button onClick={() => setDrawer(false)} aria-label="Close menu" className="absolute right-3 top-4 h-8 w-8 grid place-items-center rounded-lg text-gray-300 hover:bg-white/10">
                     <XIcon size={18} />
                   </button>
                   <SidebarContent onNavigate={() => setDrawer(false)} />
@@ -271,69 +255,55 @@ export function PortalShell() {
           </AnimatePresence>
 
           <div className={cx('transition-all duration-300', sidebarCollapsed ? 'lg:pl-[72px]' : 'lg:pl-64')}>
-            {/* Top bar for sidebar layouts */}
-            <header className="sticky top-0 z-20 bg-white/90 dark:bg-navy-900/90 backdrop-blur-md border-b border-surface-border dark:border-white/10">
+            <header className="sticky top-0 z-20 bg-navy-900/95 backdrop-blur-md border-b border-white/10">
               <div className="flex items-center gap-2 px-4 sm:px-6 h-16">
-                <button onClick={() => setDrawer(true)} aria-label="Open menu" className="lg:hidden h-9 w-9 grid place-items-center rounded-lg border border-surface-border dark:border-white/20 bg-white dark:bg-white/5 text-ink dark:text-white">
+                <button onClick={() => setDrawer(true)} aria-label="Open menu" className="lg:hidden h-9 w-9 grid place-items-center rounded-lg border border-white/15 bg-white/5 text-white">
                   <MenuIcon size={18} />
                 </button>
-                
-                <button 
-                  onClick={() => setSidebarCollapsed(!sidebarCollapsed)} 
+
+                <button
+                  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
                   aria-label="Toggle sidebar"
-                  className="hidden lg:flex h-9 w-9 items-center justify-center rounded-lg border border-surface-border dark:border-white/20 bg-white dark:bg-white/5 text-ink-muted dark:text-gray-400 hover:text-navy dark:hover:text-white transition-colors duration-150"
+                  className="hidden lg:flex h-9 w-9 items-center justify-center rounded-lg border border-white/15 bg-white/5 text-gray-300 hover:text-white transition-colors duration-150"
                 >
                   <MenuIcon size={16} />
                 </button>
-                
+
                 <div className="flex-1 min-w-0">
                   <SearchTrigger />
                 </div>
-                
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={toggleDarkMode}
-                  className="h-9 w-9 rounded-full bg-gray-100 dark:bg-white/10 flex items-center justify-center text-ink-muted dark:text-gray-400 hover:text-gold dark:hover:text-gold transition-colors duration-300"
-                  aria-label="Toggle dark mode"
-                >
-                  {darkMode ? <SunIcon size={16} /> : <MoonIcon size={16} />}
-                </motion.button>
-                
+
                 {sessionMode === 'demo' && <RoleSwitcher />}
                 <NotificationBell />
                 <button
                   onClick={() => { logout(); navigate('/'); }}
-                  className="hidden sm:grid h-9 w-9 place-items-center rounded-lg border border-surface-border dark:border-white/20 bg-white dark:bg-white/5 text-ink-muted dark:text-gray-400 hover:text-navy dark:hover:text-white hover:border-gold transition-colors duration-150"
+                  className="hidden sm:grid h-9 w-9 place-items-center rounded-lg border border-white/15 bg-white/5 text-gray-300 hover:text-white hover:border-gold transition-colors duration-150"
                   aria-label="Sign out"
                 >
                   <LogOutIcon size={16} />
                 </button>
-                <span className="hidden xl:flex items-center gap-2 pl-2 ml-1 border-l border-surface-border dark:border-white/10">
+                <span className="hidden xl:flex items-center gap-2 pl-2 ml-1 border-l border-white/10">
                   <Avatar initials={identity.initials} size="sm" />
-                  <span className="text-[13px] font-medium text-ink dark:text-white max-w-[10rem] truncate">{identity.name}</span>
+                  <span className="text-[13px] font-medium text-white max-w-[10rem] truncate">{identity.name}</span>
                 </span>
               </div>
             </header>
 
-            <main className="px-4 sm:px-6 py-6 pb-28 lg:pb-10 max-w-[1400px]">
+            <main className="px-4 sm:px-6 py-6 pb-28 lg:pb-10 max-w-[1400px] portal-content">
               <Outlet />
             </main>
           </div>
         </>
       ) : (
         <>
-          {/* Horizontal navbar layout */}
           <HorizontalNavbar />
-          
-          <main className="pt-16 px-4 sm:px-6 py-6 pb-28 lg:pb-10 max-w-[1400px] mx-auto">
+          <main className="pt-16 px-4 sm:px-6 py-6 pb-28 lg:pb-10 max-w-[1400px] mx-auto portal-content">
             <Outlet />
           </main>
         </>
       )}
 
-      {/* Mobile bottom navigation */}
-      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white dark:bg-navy-900 border-t border-surface-border dark:border-white/10" aria-label="Primary">
+      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-navy-900 border-t border-white/10" aria-label="Primary">
         <ul className="grid" style={{ gridTemplateColumns: `repeat(${mobile.length}, minmax(0,1fr))` }}>
           {mobile.map((l) => (
             <li key={l.label}>
@@ -342,7 +312,7 @@ export function PortalShell() {
                 end={l.end}
                 className={({ isActive }) => cx(
                   'flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-colors duration-150',
-                  isActive ? 'text-gold' : 'text-ink-soft dark:text-gray-500'
+                  isActive ? 'text-gold' : 'text-gray-400'
                 )}
               >
                 <Icon name={l.icon} size={19} />
