@@ -189,7 +189,8 @@ const ADMIN_NAV: NavGroup[] = [
   { label: 'Teachers', to: '/admin/teachers', icon: 'UserSquare2' },
   { label: 'Classes', to: '/admin/classes', icon: 'School' },
   { label: 'Academics & LMS', to: '/admin/academics', icon: 'BookOpen' },
-  { label: 'Attendance', to: '/admin/attendance', icon: 'CalendarCheck' }]
+  { label: 'Attendance', to: '/admin/attendance', icon: 'CalendarCheck' },
+  { label: 'Timetable', to: '/admin/timetable', icon: 'CalendarDays' }]
 
 },
 {

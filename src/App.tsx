@@ -67,6 +67,7 @@ import { AdminTeachers } from './pages/admin/AdminTeachers';
 import { AdminClasses } from './pages/admin/AdminClasses';
 import { AdminAcademics } from './pages/admin/AdminAcademics';
 import { AdminAttendance } from './pages/admin/AdminAttendance';
+import { AdminTimetable } from './pages/admin/AdminTimetable';
 import { AdminCommunication } from './pages/admin/AdminCommunication';
 import { AdminContent } from './pages/admin/AdminContent';
 import { AdminReports } from './pages/admin/AdminReports';
@@ -179,6 +180,7 @@ export function App({ initialRole = 'visitor' }: {initialRole?: DemoRole;}) {
             <Route path="/admin/classes" element={<AdminClasses />} />
             <Route path="/admin/academics" element={<AdminAcademics />} />
             <Route path="/admin/attendance" element={<AdminAttendance />} />
+            <Route path="/admin/timetable" element={<AdminTimetable />} />
             <Route path="/admin/communication" element={<AdminCommunication />} />
             <Route path="/admin/content" element={<Navigate to="/admin/content/Events" replace />} />
             <Route path="/admin/content/:tab" element={<AdminContent />} />
