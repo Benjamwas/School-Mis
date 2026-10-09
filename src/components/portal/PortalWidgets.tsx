@@ -330,29 +330,29 @@ export function GlobalSearch() {
   return (
     <Modal open={searchOpen} onClose={() => setSearchOpen(false)} title="Search SALA" description="Results are limited to what your role is permitted to see." size="md">
       <div className="relative mb-4">
-        <SearchIcon size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft" />
+        <SearchIcon size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
         <input
           autoFocus
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Students, parents, payments, assignments…"
           aria-label="Search"
-          className="w-full h-11 rounded-lg border border-line pl-9 pr-3 text-sm focus:border-forest-500 focus:ring-2 focus:ring-forest-100 outline-none" />
+          className="w-full h-11 rounded-lg border border-line bg-white pl-9 pr-3 text-sm text-black placeholder:text-gray-500 focus:border-gold focus:ring-2 focus:ring-gold/20 outline-none" />
         
       </div>
       {error &&
       <p className="text-sm text-rose-600 mb-3">{error}</p>
       }
       {!error && live && liveGroups === null && term.length >= 2 &&
-      <p className="text-sm text-ink-muted py-6 text-center">Searching…</p>
+      <p className="text-sm text-gray-600 py-6 text-center">Searching…</p>
       }
       {!error && groups.length === 0 ?
-      <p className="text-sm text-ink-muted py-6 text-center">No matches for “{q}”. Try a name, receipt number or class.</p> :
+      <p className="text-sm text-gray-600 py-6 text-center">No matches for “{q}”. Try a name, receipt number or class.</p> :
 
       <div className="space-y-4">
           {groups.map((g) =>
         <div key={g.group}>
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-soft mb-1.5">{g.group}</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 mb-1.5">{g.group}</p>
               <ul className="space-y-1">
                 {g.items.map((i) =>
             <li key={i.title + i.meta}>
@@ -361,10 +361,10 @@ export function GlobalSearch() {
                   setSearchOpen(false);
                   navigate(i.to);
                 }}
-                className="w-full text-left rounded-lg px-3 py-2 hover:bg-cream transition-colors duration-150">
+                className="w-full text-left rounded-lg px-3 py-2 hover:bg-gray-100 transition-colors duration-150">
                 
-                      <span className="block text-[13.5px] font-medium text-ink">{i.title}</span>
-                      <span className="block text-[12px] text-ink-muted">{i.meta}</span>
+                      <span className="block text-[13.5px] font-medium text-black">{i.title}</span>
+                      <span className="block text-[12px] text-gray-600">{i.meta}</span>
                     </button>
                   </li>
             )}
