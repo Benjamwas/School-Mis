@@ -6,8 +6,24 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
+      "source": "/api/:path*",
+      "destination": "https://mis-backend-givj.onrender.com/api/:path*"
+    },
+    {
+      "source": "/health",
+      "destination": "https://mis-backend-givj.onrender.com/health"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/:path*",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store" }
+      ]
     }
   ]
 }
