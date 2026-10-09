@@ -310,7 +310,7 @@ export function PortalShell() {
       )}
 
       <nav className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-navy-900 border-t border-white/10" aria-label="Primary">
-        <ul className="grid" style={{ gridTemplateColumns: `repeat(${mobile.length}, minmax(0,1fr))` }}>
+        <ul className="grid" style={{ gridTemplateColumns: `repeat(${mobile.length + 1}, minmax(0,1fr))` }}>
           {mobile.map((l) => (
             <li key={l.label}>
               <NavLink
@@ -326,6 +326,16 @@ export function PortalShell() {
               </NavLink>
             </li>
           ))}
+          <li>
+            <button
+              onClick={() => { logout(); navigate('/'); }}
+              className="w-full flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium text-gray-400 hover:text-red-400 transition-colors duration-150"
+              aria-label="Sign out"
+            >
+              <LogOutIcon size={19} />
+              Sign out
+            </button>
+          </li>
         </ul>
       </nav>
 
