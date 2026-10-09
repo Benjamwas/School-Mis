@@ -46,9 +46,10 @@ export function useDashboard<T>(kind: string): LoadState<T> {
 }
 
 /** Fetch an object-returning endpoint (reports list, summary objects, counts). */
-export function useObject<T>(path: string): LoadState<T> {
+export function useObject<T>(path: string): LoadState<T> & { refresh: () => void } {
   const live = useApiLive();
   const [state, setState] = useState<LoadState<T>>({ loading: true, data: null, error: null });
+  const [tick, setTick] = useState(0);
 
   useEffect(() => {
     let alive = true;
@@ -56,20 +57,21 @@ export function useObject<T>(path: string): LoadState<T> {
       setState({ loading: false, data: null, error: null });
       return () => { alive = false; };
     }
-    setState({ loading: true, data: null, error: null });
+    setState((s) => ({ ...s, loading: true, error: null }));
     api.get<T>(path)
       .then((data) => { if (alive) setState({ loading: false, data, error: null }); })
       .catch((err) => { if (alive) setState({ loading: false, data: null, error: describe(err) }); });
     return () => { alive = false; };
-  }, [path, live]);
+  }, [path, live, tick]);
 
-  return state;
+  return { ...state, refresh: () => setTick((t) => t + 1) };
 }
 
 /** Fetch a list resource (returns the raw array for DRF paginated/envelope responses). */
-export function useList<T>(path: string): LoadState<T[]> {
+export function useList<T>(path: string): LoadState<T[]> & { refresh: () => void } {
   const live = useApiLive();
   const [state, setState] = useState<LoadState<T[]>>({ loading: true, data: null, error: null });
+  const [tick, setTick] = useState(0);
 
   useEffect(() => {
     let alive = true;
@@ -77,14 +79,14 @@ export function useList<T>(path: string): LoadState<T[]> {
       setState({ loading: false, data: null, error: null });
       return () => { alive = false; };
     }
-    setState({ loading: true, data: null, error: null });
+    setState((s) => ({ ...s, loading: true, error: null }));
     api.get<T[]>(path)
       .then((data) => { if (alive) setState({ loading: false, data, error: null }); })
       .catch((err) => { if (alive) setState({ loading: false, data: null, error: describe(err) }); });
     return () => { alive = false; };
-  }, [path, live]);
+  }, [path, live, tick]);
 
-  return state;
+  return { ...state, refresh: () => setTick((t) => t + 1) };
 }
 
 /** Fetch a single resource by id from the backend when in API mode. */

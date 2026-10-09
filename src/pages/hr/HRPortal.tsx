@@ -1,13 +1,16 @@
+import React from 'react';
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { CheckIcon, DownloadIcon, PlusIcon, XIcon } from 'lucide-react';
-import { Badge, Button, Card, CardHeader, PageHeader, Stat, StatusBadge } from '../../components/ui/primitives';
+import { CheckIcon, DownloadIcon, PlusIcon, Trash2Icon, XIcon } from 'lucide-react';
+import { Badge, Button, Card, CardHeader, Field, Input, PageHeader, Select, Stat, StatusBadge } from '../../components/ui/primitives';
 import { BarChartBlock, ChartFrame, DataTable } from '../../components/ui/data';
-import { Alert } from '../../components/ui/feedback';
+import { Alert, ConfirmDialog, Modal } from '../../components/ui/feedback';
 import { DUTY_ROSTER, HR_TICKETS, PAYROLL_SUMMARY, PAYSLIP_HISTORY, STAFF_DIRECTORY, STAFF_LEAVE_QUEUE } from '../../data/hr';
 import { formatKES } from '../../data/finance';
 import { useApp } from '../../contexts/AppContext';
 import { useApiLive, useDashboard, useList } from '../../api/hooks';
 import { api } from '../../api/client';
+import { downloadCSV } from '../../lib/export';
 import type { ApiEmployee, ApiLeaveRequest, DashboardHR } from '../../api/types';
 
 const TITLES: Record<string, {title: string;sub: string;}> = {
@@ -24,6 +27,12 @@ export function HRPortal() {
   const { tab = 'overview' } = useParams();
   const meta = TITLES[tab] ?? TITLES.overview;
   const { toast } = useApp();
+  const [showStaff, setShowStaff] = useState(false);
+  const [staffBusy, setStaffBusy] = useState(false);
+  const [staffForm, setStaffForm] = useState({ first_name: '', last_name: '', employee_number: '', role_title: '', phone: '', email: '', employment_status: 'ACTIVE' });
+  const [delStaffId, setDelStaffId] = useState<string | null>(null);
+  const [delStaffName, setDelStaffName] = useState('');
+  const [delBusy, setDelBusy] = useState(false);
   const live = useApiLive();
   const dashboard = useDashboard<DashboardHR>('hr');
   const employees = useList<ApiEmployee>('/hr/employees/');
@@ -86,6 +95,47 @@ export function HRPortal() {
     }
   };
 
+
+  const addStaff = async () => {
+    if (!staffForm.first_name || !staffForm.last_name || !staffForm.employee_number) {
+      toast({ tone: 'warning', title: 'Missing fields', body: 'Name and staff number are required.' });
+      return;
+    }
+    setStaffBusy(true);
+    try {
+      await api.post('hr/employees/', {
+        person: { first_name: staffForm.first_name, last_name: staffForm.last_name, phone: staffForm.phone || undefined, email: staffForm.email || undefined },
+        employee_number: staffForm.employee_number,
+        role_title: staffForm.role_title || undefined,
+        employment_status: staffForm.employment_status,
+        employment_date: new Date().toISOString().slice(0, 10)
+      });
+      toast({ tone: 'success', title: 'Staff added', body: `${staffForm.first_name} ${staffForm.last_name} added.` });
+      setShowStaff(false);
+      setStaffForm({ first_name: '', last_name: '', employee_number: '', role_title: '', phone: '', email: '', employment_status: 'ACTIVE' });
+      employees.refresh();
+    } catch (e: any) {
+      toast({ tone: 'danger', title: 'Add failed', body: e?.message || 'Try again.' });
+    } finally {
+      setStaffBusy(false);
+    }
+  };
+
+  const removeStaff = async () => {
+    if (!delStaffId) return;
+    setDelBusy(true);
+    try {
+      await api.delete(`hr/employees/${delStaffId}/`);
+      toast({ tone: 'success', title: 'Staff removed', body: `${delStaffName} removed.` });
+      setDelStaffId(null);
+      employees.refresh();
+    } catch (e: any) {
+      toast({ tone: 'danger', title: 'Remove failed', body: e?.message || 'Try again.' });
+    } finally {
+      setDelBusy(false);
+    }
+  };
+
   return (
     <div>
       <PageHeader
@@ -93,12 +143,11 @@ export function HRPortal() {
         subtitle={meta.sub}
         actions={
         <>
-            <Button size="sm" variant="secondary" icon={<DownloadIcon size={15} />}>
-              Export
-            </Button>
-            <Button size="sm" icon={<PlusIcon size={15} />}>
-              Add staff
-            </Button>
+            <Button size="sm" variant="secondary" icon={<DownloadIcon size={15} />} onClick={() => {
+              downloadCSV('staff', staffRows.map((r) => ({ Name: r.name, Role: r.role, Department: r.dept, 'Staff No': r.staffNo, Phone: r.phone, Status: r.status })));
+              toast({ tone: 'success', title: 'Export ready', body: 'Staff CSV downloaded.' });
+            }}>Export</Button>
+            <Button size="sm" icon={<PlusIcon size={15} />} onClick={() => setShowStaff(true)}>Add staff</Button>
           </>
         } />
       
@@ -163,7 +212,21 @@ export function HRPortal() {
           { key: 'dept', header: 'Department', hideOnMobile: true },
           { key: 'staffNo', header: 'Staff no.', hideOnMobile: true },
           { key: 'phone', header: 'Phone', hideOnMobile: true },
-          { key: 'status', header: 'Status', render: (r: any) => <StatusBadge status={r.status} /> }]
+          { key: 'status', header: 'Status', render: (r: any) => <StatusBadge status={r.status} /> },
+          {
+            key: 'a',
+            header: '',
+            align: 'right' as const,
+            render: (r: any) => live ? (
+              <Button variant="ghost" size="sm" onClick={(e: React.MouseEvent) => {
+                e.stopPropagation();
+                const emp = (employees.data ?? []).find((x) => x.full_name === r.name || x.person?.full_name === r.name);
+                if (emp) { setDelStaffId(emp.id); setDelStaffName(r.name); }
+              }}>
+                <Trash2Icon size={14} className="text-rose-600" />
+              </Button>
+            ) : null
+          }]
           }
            rows={attendanceRows}
           mobileTitle={(r: any) => r.name}
@@ -283,6 +346,50 @@ export function HRPortal() {
         
         </Card>
       }
-    </div>);
 
+      <Modal open={showStaff} onClose={() => setShowStaff(false)} title="Add staff" description="Create a staff record (teaching or support).">
+        <div className="grid sm:grid-cols-2 gap-4">
+          <Field label="First name" required>
+            <Input value={staffForm.first_name} onChange={(e) => setStaffForm({ ...staffForm, first_name: e.target.value })} />
+          </Field>
+          <Field label="Last name" required>
+            <Input value={staffForm.last_name} onChange={(e) => setStaffForm({ ...staffForm, last_name: e.target.value })} />
+          </Field>
+          <Field label="Staff number" required>
+            <Input value={staffForm.employee_number} onChange={(e) => setStaffForm({ ...staffForm, employee_number: e.target.value })} placeholder="SALA-S-030" />
+          </Field>
+          <Field label="Role title">
+            <Input value={staffForm.role_title} onChange={(e) => setStaffForm({ ...staffForm, role_title: e.target.value })} placeholder="Support Staff" />
+          </Field>
+          <Field label="Phone">
+            <Input value={staffForm.phone} onChange={(e) => setStaffForm({ ...staffForm, phone: e.target.value })} />
+          </Field>
+          <Field label="Email">
+            <Input type="email" value={staffForm.email} onChange={(e) => setStaffForm({ ...staffForm, email: e.target.value })} />
+          </Field>
+          <Field label="Status">
+            <Select value={staffForm.employment_status} onChange={(e) => setStaffForm({ ...staffForm, employment_status: e.target.value })}>
+              <option value="ACTIVE">Active</option>
+              <option value="PROBATION">Probation</option>
+              <option value="ON_LEAVE">On leave</option>
+            </Select>
+          </Field>
+        </div>
+        <div className="mt-5 flex justify-end gap-2">
+          <Button variant="secondary" size="sm" onClick={() => setShowStaff(false)}>Cancel</Button>
+          <Button size="sm" disabled={staffBusy} onClick={addStaff}>{staffBusy ? 'Saving…' : 'Add staff'}</Button>
+        </div>
+      </Modal>
+
+      <ConfirmDialog
+        open={!!delStaffId}
+        onClose={() => setDelStaffId(null)}
+        onConfirm={removeStaff}
+        title="Remove staff?"
+        body={`${delStaffName} will be permanently removed from the staff directory.`}
+        confirmLabel={delBusy ? 'Removing…' : 'Remove staff'}
+        danger
+      />
+    </div>
+  );
 }

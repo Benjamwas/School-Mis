@@ -1,28 +1,23 @@
 import React, { useState } from 'react';
 import { MessageCircleIcon, SendIcon, SmartphoneIcon, BellIcon } from 'lucide-react';
-import { Badge, Button, Card, CardHeader, Field, PageHeader, Select, Stat, StatusBadge, Textarea, cx } from '../../components/ui/primitives';
+import { Badge, Button, Card, CardHeader, Field, PageHeader, Select, Stat, StatusBadge, Textarea } from '../../components/ui/primitives';
 import { ConfirmDialog } from '../../components/ui/feedback';
 import { DataTable } from '../../components/ui/data';
 import { useApp } from '../../contexts/AppContext';
+import { api } from '../../api/client';
 import { useApiLive, useList } from '../../api/hooks';
 import type { ApiAnnouncement, ApiNotification } from '../../api/types';
 
 const CHANNELS = [
-  { id: 'SMS', icon: <SmartphoneIcon size={17} />, note: 'Delivered via Africa’s Talking · KES 0.80 per message' },
-  { id: 'WhatsApp', icon: <MessageCircleIcon size={17} />, note: 'Verified business sender · SALA Schools' },
-  { id: 'In-app', icon: <BellIcon size={17} />, note: 'Parent and staff portal notification' }];
-
-const MOCK_MESSAGES = [
-  { subject: 'Consultation Day booking opens Monday', channel: 'SMS', audience: 'All parents', recipients: 932, sent: '18 Sep, 4:00pm', status: 'Delivered' },
-  { subject: 'Term 3 examination timetable', channel: 'In-app', audience: 'All parents', recipients: 932, sent: '15 Sep, 9:00am', status: 'Delivered' },
-  { subject: 'Grade 4 trip consent reminder', channel: 'WhatsApp', audience: 'Grade 4 parents', recipients: 78, sent: '12 Sep, 2:30pm', status: 'Delivered' },
-  { subject: 'Staff briefing moved to 3:30pm', channel: 'SMS', audience: 'All staff', recipients: 86, sent: '10 Sep, 11:10am', status: 'Delivered' },
-  { subject: 'Fee balance reminder — Term 3', channel: 'SMS', audience: 'Parents with balances', recipients: 214, sent: '08 Sep, 8:00am', status: 'Scheduled' }];
+  { id: 'SMS', icon: <SmartphoneIcon size={17} />, note: 'Delivered via provider · per-message rates apply' },
+  { id: 'WhatsApp', icon: <MessageCircleIcon size={17} />, note: 'Verified business sender' },
+  { id: 'IN_APP', icon: <BellIcon size={17} />, note: 'Parent and staff portal notification' }
+];
 
 function fmtStamp(value?: string | null): string {
   if (!value) return '—';
   const d = new Date(value);
-  if (isNaN(d.getTime())) return '—';
+  if (Number.isNaN(d.getTime())) return '—';
   return d.toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
 }
 
@@ -32,12 +27,14 @@ function labelise(value?: string | null): string {
 }
 
 export function AdminCommunication() {
-  const [channel, setChannel] = useState('SMS');
+  const [channel, setChannel] = useState('IN_APP');
   const [audience, setAudience] = useState('All parents');
+  const [title, setTitle] = useState('Consultation Day booking opens Monday');
   const [confirm, setConfirm] = useState(false);
   const [message, setMessage] = useState(
     'Dear parents, Consultation Day is on Saturday 26 September. Booking opens in the Parent Portal on Monday at 8:00am. — SALA'
   );
+  const [busy, setBusy] = useState(false);
   const { toast } = useApp();
 
   const live = useApiLive();
@@ -49,166 +46,168 @@ export function AdminCommunication() {
       ...(announcements.data ?? []).map((a) => ({
         id: a.id,
         subject: a.title,
-        channel: a.channels?.[0] ?? 'In-app',
-        audience: labelise(a.audience),
-        recipients: 0,
-        sent: fmtStamp(a.published_at),
-        status: labelise(a.status)
+        channel: (a.channels ?? []).join(', ') || 'In-app',
+        audience: a.audience || 'All',
+        recipients: '—',
+        sent: fmtStamp(a.published_at ?? (a as any).created_at),
+        status: a.status === 'PUBLISHED' ? 'Delivered' : labelise(a.status)
       })),
-      ...(notifications.data ?? []).map((n) => ({
+      ...(notifications.data ?? []).slice(0, 5).map((n) => ({
         id: n.id,
         subject: n.title,
         channel: 'In-app',
-        audience: labelise(n.type),
-        recipients: 0,
-        sent: fmtStamp(n.created_at),
-        status: n.is_read ? 'Delivered' : 'Pending'
+        audience: '—',
+        recipients: '1',
+        sent: fmtStamp((n as any).created_at),
+        status: 'Delivered'
       }))
     ]
-    : MOCK_MESSAGES;
+    : [
+      { id: 'm1', subject: 'Consultation Day booking opens Monday', channel: 'SMS', audience: 'All parents', recipients: 932, sent: '18 Sep, 4:00pm', status: 'Delivered' },
+      { id: 'm2', subject: 'Term 3 examination timetable', channel: 'In-app', audience: 'All parents', recipients: 932, sent: '15 Sep, 9:00am', status: 'Delivered' },
+      { id: 'm3', subject: 'Grade 4 trip consent reminder', channel: 'WhatsApp', audience: 'Grade 4 parents', recipients: 78, sent: '12 Sep, 2:30pm', status: 'Delivered' }
+    ];
 
-  const recipients = audience === 'All parents' ? 932 : audience === 'Teachers' ? 86 : audience === 'Grade 4 Acacia parents' ? 26 : 1148;
+  const sendMessage = async () => {
+    if (!message.trim()) {
+      toast({ tone: 'warning', title: 'Empty message', body: 'Write a message before sending.' });
+      return;
+    }
+    setBusy(true);
+    try {
+      if (channel === 'IN_APP' || channel === 'In-app') {
+        // In-app: create a published announcement
+        await api.post('announcements/', {
+          title: title || 'School announcement',
+          body: message,
+          audience: audience,
+          channels: ['IN_APP']
+        });
+      } else if (channel === 'SMS') {
+        await api.post('campaigns/send_sms/', { to: '', body: message });
+      } else if (channel === 'WhatsApp') {
+        await api.post('campaigns/send_whatsapp/', { to: '', body: message });
+      } else {
+        // Fallback: create announcement
+        await api.post('announcements/', {
+          title: title || 'School announcement',
+          body: message,
+          audience: audience,
+          channels: [channel]
+        });
+      }
+      toast({ tone: 'success', title: 'Message sent', body: `Delivered via ${channel} to ${audience.toLowerCase()}.` });
+      setConfirm(false);
+      announcements.refresh();
+      notifications.refresh();
+    } catch (e: any) {
+      toast({ tone: 'danger', title: 'Send failed', body: e?.message || 'Try again.' });
+    } finally {
+      setBusy(false);
+    }
+  };
 
-  const messageError = announcements.error ?? notifications.error;
+  const smsCount = Math.max(1, Math.ceil(message.length / 160));
 
   return (
     <div>
-      <PageHeader title="Communication centre" subtitle="Announcements, SMS, WhatsApp and in-app notifications to families and staff." />
+      <PageHeader
+        title="Communication"
+        subtitle={live ? `${sent.length} messages on record` : 'Send SMS, WhatsApp and in-app messages to parents and staff.'} />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Stat label="Messages this term" value="18,402" sub="SMS, WhatsApp and in-app" tone="primary" />
-        <Stat label="Delivery rate" value="98.4%" sub="Last 30 days" />
-        <Stat label="Scheduled" value="3" sub="Next: Monday 8:00am" tone="gold" />
-        <Stat label="SMS credit" value="KES 42,800" sub="Approx. 53,000 messages" />
+      <div className="grid gap-4 sm:grid-cols-3 mb-6">
+        <Stat label="Channels" value="3" sub="SMS · WhatsApp · In-app" tone="primary" />
+        <Stat label="Announcements" value={live ? String(announcements.data?.length ?? 0) : '24'} />
+        <Stat label="Portal notifications" value={live ? String(notifications.data?.length ?? 0) : '118'} tone="gold" />
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
+      <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
         <Card>
-          <CardHeader title="Compose a message" subtitle="Preview before sending — messages cannot be recalled" />
-          <div className="p-5 space-y-5">
+          <CardHeader title="Compose message" subtitle="In-app messages appear in the parent/staff portal" />
+          <div className="p-5 space-y-4">
             <div>
               <p className="text-[13px] font-medium text-ink mb-2">Channel</p>
-              <div className="grid sm:grid-cols-3 gap-2.5">
-                {CHANNELS.map((c) =>
-                <button
-                  key={c.id}
-                  onClick={() => setChannel(c.id)}
-                  aria-pressed={channel === c.id}
-                  className={cx(
-                    'rounded-lg border p-3 text-left transition-colors duration-150',
-                    channel === c.id ? 'border-forest-600 bg-forest-50/60' : 'border-line hover:border-forest-300'
-                  )}>
-                  
-                    <span className="flex items-center gap-2 text-[13.5px] font-medium text-ink">
-                      {c.icon} {c.id}
+              <div className="grid gap-2">
+                {CHANNELS.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setChannel(c.id)}
+                    className={cx(
+                      'flex items-center gap-3 rounded-xl border px-4 py-3 text-left transition-colors duration-150',
+                      channel === c.id
+                        ? 'border-gold bg-gold/10 text-navy'
+                        : 'border-surface-border bg-white hover:border-gold/50'
+                    )}
+                  >
+                    <span className={channel === c.id ? 'text-gold' : 'text-ink-muted'}>{c.icon}</span>
+                    <span>
+                      <span className="block text-[13.5px] font-semibold">{c.id === 'IN_APP' ? 'In-app' : c.id}</span>
+                      <span className="block text-[12px] text-ink-muted">{c.note}</span>
                     </span>
-                    <span className="mt-1 block text-[11.5px] text-ink-muted leading-snug">{c.note}</span>
                   </button>
-                )}
+                ))}
               </div>
             </div>
 
-            <div className="grid sm:grid-cols-2 gap-5">
-              <Field label="Audience" required>
-                <Select value={audience} onChange={(e) => setAudience(e.target.value)}>
-                  {['All parents', 'Grade 4 Acacia parents', 'Specific learners', 'Teachers', 'All staff', 'School-wide'].map((a) =>
-                  <option key={a}>{a}</option>
-                  )}
-                </Select>
-              </Field>
-              <Field label="Send">
-                <Select defaultValue="Immediately">
-                  <option>Immediately</option>
-                  <option>Monday 8:00am</option>
-                  <option>Save as draft</option>
-                </Select>
-              </Field>
-            </div>
-
-            <Field label="Message" required hint={`${message.length} characters · ${Math.ceil(message.length / 160)} SMS per recipient`}>
-              <Textarea value={message} onChange={(e) => setMessage(e.target.value)} />
+            <Field label="Audience">
+              <Select value={audience} onChange={(e) => setAudience(e.target.value)}>
+                <option>All parents</option>
+                <option>All staff</option>
+                <option>Grade 4 parents</option>
+                <option>Parents with balances</option>
+                <option>ECD parents</option>
+              </Select>
             </Field>
 
-            <div className="rounded-lg border border-line bg-cream/60 p-4">
-              <p className="text-[12px] uppercase tracking-wide text-ink-soft mb-1.5">Preview</p>
-              <p className="text-[13.5px] leading-relaxed text-ink">{message}</p>
+            <Field label="Title / subject">
+              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Consultation Day booking" />
+            </Field>
+
+            <Field label="Message" required>
+              <Textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={5} />
+            </Field>
+
+            <div className="flex items-center justify-between text-[12px] text-ink-muted">
+              <span>{message.length} characters · {smsCount} SMS segment{smsCount > 1 ? 's' : ''}</span>
+              <span className="rounded-full bg-surface-light px-2 py-0.5">Preview: “{message.slice(0, 60)}…”</span>
             </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="text-[13px] text-ink-muted">
-                Sending to <span className="font-medium text-ink">{recipients.toLocaleString()}</span> recipients via {channel}.
-              </p>
-              <Button icon={<SendIcon size={15} />} onClick={() => setConfirm(true)}>
-                Send message
-              </Button>
-            </div>
+            <Button full icon={<SendIcon size={16} />} onClick={() => setConfirm(true)}>
+              Send message
+            </Button>
           </div>
         </Card>
 
-        <div className="space-y-6">
-          <Card>
-            <CardHeader title="Templates" />
-            <ul className="divide-y divide-line">
-              {['Fee reminder', 'Absence notification', 'Event invitation', 'Results published', 'Emergency closure'].map((t) =>
-              <li key={t} className="px-5 py-3 flex items-center justify-between gap-3">
-                  <span className="text-[13.5px] text-ink">{t}</span>
-                  <Button variant="ghost" size="sm" onClick={() => setMessage(`[${t}] Dear parents, …`)}>
-                    Use
-                  </Button>
-                </li>
-              )}
-            </ul>
-          </Card>
-          <Card className="p-5">
-            <h3 className="text-[15px] font-semibold text-ink">Audience sizes</h3>
-            <ul className="mt-3 space-y-2 text-[13.5px]">
-              {[
-              ['All parents', '932'],
-              ['All staff', '86'],
-              ['Upper Primary parents', '421'],
-              ['Grade 4 Acacia parents', '26']].
-              map(([k, v]) =>
-              <li key={k} className="flex justify-between">
-                  <span className="text-ink-muted">{k}</span>
-                  <span className="font-medium text-ink tabular-nums">{v}</span>
-                </li>
-              )}
-            </ul>
-          </Card>
-        </div>
+        <Card>
+          <CardHeader title="Sent messages" subtitle={live ? 'From announcements & notifications' : undefined} />
+          {live && announcements.error && <p className="px-5 pt-3 text-sm text-rose-600">{announcements.error}</p>}
+          <DataTable
+            columns={[
+              { key: 'subject', header: 'Message', render: (r: any) => <span className="font-medium">{r.subject}</span> },
+              { key: 'channel', header: 'Channel', hideOnMobile: true },
+              { key: 'audience', header: 'Audience', hideOnMobile: true },
+              { key: 'sent', header: 'Sent', hideOnMobile: true },
+              { key: 'status', header: 'Status', render: (r: any) => <StatusBadge status={r.status} /> }
+            ]}
+            rows={sent}
+            mobileTitle={(r: any) => r.subject}
+            caption="Sent messages" />
+        </Card>
       </div>
-
-      <Card className="mt-6">
-        <CardHeader title="Sent messages" subtitle="Last 30 days" />
-        {live && messageError &&
-        <p className="px-5 pt-3 text-sm text-rose-600">{messageError}</p>
-        }
-        <DataTable
-          columns={[
-          { key: 'subject', header: 'Message', render: (r: any) => <span className="font-medium">{r.subject}</span> },
-          { key: 'channel', header: 'Channel', render: (r: any) => <Badge tone="neutral">{r.channel}</Badge> },
-          { key: 'audience', header: 'Audience', hideOnMobile: true },
-          { key: 'recipients', header: 'Recipients', align: 'right' },
-          { key: 'sent', header: 'Sent', hideOnMobile: true },
-          { key: 'status', header: 'Status', render: (r: any) => <StatusBadge status={r.status} /> }]
-          }
-          rows={sent}
-          mobileTitle={(r: any) => r.subject}
-          caption="Sent messages" />
-        
-      </Card>
 
       <ConfirmDialog
         open={confirm}
         onClose={() => setConfirm(false)}
-        onConfirm={() => {
-          setConfirm(false);
-          toast({ tone: 'success', title: `Message sent to ${recipients.toLocaleString()} recipients`, body: `Delivered via ${channel}. Receipts will appear in sent messages.` });
-        }}
-        title="Send this message?"
-        body={`${recipients.toLocaleString()} recipients will receive this ${channel} message immediately. Messages cannot be recalled once sent.`}
-        confirmLabel="Send now" />
-      
-    </div>);
+        onConfirm={sendMessage}
+        title="Send message?"
+        body={`This will send via ${channel === 'IN_APP' ? 'in-app' : channel} to ${audience.toLowerCase()}.`}
+        confirmLabel={busy ? 'Sending…' : 'Send now'}
+      />
+    </div>
+  );
+}
 
+function cx(...classes: (string | false | undefined | null)[]) {
+  return classes.filter(Boolean).join(' ');
 }

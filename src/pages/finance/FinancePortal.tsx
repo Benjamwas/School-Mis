@@ -1,11 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { DownloadIcon, PlusIcon, PrinterIcon } from 'lucide-react';
-import { Badge, Button, Card, CardHeader, PageHeader, Stat, StatusBadge } from '../../components/ui/primitives';
+import { DownloadIcon, PlusIcon, PrinterIcon, RotateCcwIcon } from 'lucide-react';
+import { Badge, Button, Card, CardHeader, Field, Input, PageHeader, Select, Stat, StatusBadge } from '../../components/ui/primitives';
 import { BarChartBlock, ChartFrame, DataTable, DonutChartBlock, Pagination, TableToolbar, useTableState } from '../../components/ui/data';
-import { Alert } from '../../components/ui/feedback';
+import { Alert, ConfirmDialog, Modal } from '../../components/ui/feedback';
 import { COLLECTIONS_TREND, FINANCE_SUMMARY, PAYMENTS, PAYMENT_METHOD_SPLIT, STUDENT_BALANCES, formatKES } from '../../data/finance';
+import { api } from '../../api/client';
 import { useApiLive, useDashboard, useList, useObject } from '../../api/hooks';
+import { downloadCSV } from '../../lib/export';
+import { useApp } from '../../contexts/AppContext';
 import type { ApiInvoice, ApiPayment, ApiReceipt, DashboardFinance } from '../../api/types';
 
 const TITLES: Record<string, {title: string;sub: string;}> = {
@@ -73,14 +76,21 @@ type OutstandingSummary = {
 export function FinancePortal() {
   const { tab = 'overview' } = useParams();
   const navigate = useNavigate();
+  const { toast } = useApp();
+  const [showPay, setShowPay] = useState(false);
+  const [payBusy, setPayBusy] = useState(false);
+  const [payForm, setPayForm] = useState({ student_id: '', amount: '', method: 'M_PESA', transaction_ref: '' });
+  const [refundId, setRefundId] = useState<string | null>(null);
+  const [refundBusy, setRefundBusy] = useState(false);
   const meta = TITLES[tab] ?? TITLES.overview;
   const live = useApiLive();
 
   const fin = useDashboard<DashboardFinance>('finance');
-  const payments = useList<ApiPayment>('/payments/');
+  const payments = useList<ApiPayment>('payments/');
   const outstandingSummary = useObject<OutstandingSummary>('finance/invoices/outstanding/');
   const invoices = useList<ApiInvoice>('finance/invoices/');
   const receipts = useList<ApiReceipt>('finance/receipts/');
+  const students = useList<{ id: string; full_name?: string; person?: { full_name?: string }; admission_number?: string }>('students/');
 
   const paymentRows: any[] = live
     ? (payments.data ?? []).map((payment) => ({
@@ -96,6 +106,49 @@ export function FinancePortal() {
     : PAYMENTS;
 
   const recentPayments = live ? paymentRows.slice(0, 6) : PAYMENTS;
+
+  const recordPayment = async () => {
+    if (!payForm.student_id || !payForm.amount) {
+      toast({ tone: 'warning', title: 'Missing fields', body: 'Student ID and amount are required.' });
+      return;
+    }
+    setPayBusy(true);
+    try {
+      await api.post('payments/', {
+        student_id: payForm.student_id,
+        amount: Number(payForm.amount),
+        method: payForm.method,
+        status: 'SUCCESS',
+        transaction_ref: payForm.transaction_ref || undefined
+      });
+      toast({ tone: 'success', title: 'Payment recorded', body: `KES ${Number(payForm.amount).toLocaleString()} received.` });
+      setShowPay(false);
+      setPayForm({ student_id: '', amount: '', method: 'M_PESA', transaction_ref: '' });
+      payments.refresh();
+      fin.refresh();
+    } catch (e: any) {
+      toast({ tone: 'danger', title: 'Payment failed', body: e?.message || 'Try again.' });
+    } finally {
+      setPayBusy(false);
+    }
+  };
+
+  const refundPayment = async () => {
+    if (!refundId) return;
+    setRefundBusy(true);
+    try {
+      await api.post(`payments/${refundId}/reverse/`, { reason: 'Admin refund' });
+      toast({ tone: 'success', title: 'Payment refunded', body: 'Payment reversed and invoices updated.' });
+      setRefundId(null);
+      payments.refresh();
+      fin.refresh();
+    } catch (e: any) {
+      toast({ tone: 'danger', title: 'Refund failed', body: e?.message || 'Try again.' });
+    } finally {
+      setRefundBusy(false);
+    }
+  };
+
 
   const balanceRows: BalanceRow[] = live
     ? (outstandingSummary.data?.students ?? []).map((row) => {
@@ -156,12 +209,11 @@ export function FinancePortal() {
         subtitle={meta.sub}
         actions={
         <>
-            <Button size="sm" variant="secondary" icon={<DownloadIcon size={15} />}>
-              Export
-            </Button>
-            <Button size="sm" icon={<PlusIcon size={15} />} onClick={() => navigate('/finance/payments')}>
-              Record payment
-            </Button>
+            <Button size="sm" variant="secondary" icon={<DownloadIcon size={15} />} onClick={() => {
+              downloadCSV('payments', paymentRows.map((r) => ({ Date: r.date, Student: r.student, Method: r.method, Reference: r.reference, Amount: r.amount })));
+              toast({ tone: 'success', title: 'Export ready', body: 'Payments CSV downloaded.' });
+            }}>Export</Button>
+            <Button size="sm" icon={<PlusIcon size={15} />} onClick={() => setShowPay(true)}>Record payment</Button>
           </>
         } />
 
@@ -353,6 +405,47 @@ export function FinancePortal() {
         )}
         </div>
       }
-    </div>);
 
+      <Modal open={showPay} onClose={() => setShowPay(false)} title="Record payment" description="Log a manual payment (M-Pesa, bank, card).">
+        <div className="space-y-4">
+          <Field label="Student" required>
+            <Select value={payForm.student_id} onChange={(e) => setPayForm({ ...payForm, student_id: e.target.value })}>
+              <option value="">— select learner —</option>
+              {(students.data ?? []).map((s) => (
+                <option key={s.id} value={s.id}>{s.full_name || s.person?.full_name || s.admission_number || s.id}</option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Amount (KES)" required>
+            <Input type="number" min="1" value={payForm.amount} onChange={(e) => setPayForm({ ...payForm, amount: e.target.value })} placeholder="5000" />
+          </Field>
+          <Field label="Method">
+            <Select value={payForm.method} onChange={(e) => setPayForm({ ...payForm, method: e.target.value })}>
+              <option value="M_PESA">M-Pesa</option>
+              <option value="BANK_TRANSFER">Bank transfer</option>
+              <option value="CARD">Card</option>
+              <option value="CASH">Cash</option>
+            </Select>
+          </Field>
+          <Field label="Transaction reference">
+            <Input value={payForm.transaction_ref} onChange={(e) => setPayForm({ ...payForm, transaction_ref: e.target.value })} placeholder="Optional" />
+          </Field>
+        </div>
+        <div className="mt-5 flex justify-end gap-2">
+          <Button variant="secondary" size="sm" onClick={() => setShowPay(false)}>Cancel</Button>
+          <Button size="sm" disabled={payBusy} onClick={recordPayment}>{payBusy ? 'Saving…' : 'Record payment'}</Button>
+        </div>
+      </Modal>
+
+      <ConfirmDialog
+        open={!!refundId}
+        onClose={() => setRefundId(null)}
+        onConfirm={refundPayment}
+        title="Refund payment?"
+        body="This reverses the payment and updates linked invoices. This cannot be undone."
+        confirmLabel={refundBusy ? 'Refunding…' : 'Refund payment'}
+        danger
+      />
+    </div>
+  );
 }

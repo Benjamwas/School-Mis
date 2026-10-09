@@ -8,6 +8,7 @@ import { ASSIGNMENTS, ATTENDANCE_SUMMARY, CLASS_SUBJECT_AVERAGES, SUBJECT_SCORES
 import { FEE_SUMMARY, PAYMENTS, formatKES } from '../../data/finance';
 import { GUARDIANS, STUDENTS, TEACHERS } from '../../data/people';
 import { useApp } from '../../contexts/AppContext';
+import { api } from '../../api/client';
 import { useApiLive, useDetail, useObject } from '../../api/hooks';
 import type { ApiStudent } from '../../api/types';
 
@@ -385,9 +386,14 @@ export function AdminStudentProfile() {
       <ConfirmDialog
         open={remove}
         onClose={() => setRemove(false)}
-        onConfirm={() => {
+        onConfirm={async () => {
           setRemove(false);
-          toast({ tone: 'warning', title: 'Student archived', body: `${student.name} has been moved to archived records.` });
+          try {
+            await api.delete(`students/${student.id}/`);
+            toast({ tone: 'success', title: 'Student archived', body: `${student.name} has been moved to archived records.` });
+          } catch (e: any) {
+            toast({ tone: 'danger', title: 'Archive failed', body: e?.message || 'Try again.' });
+          }
         }}
         title={`Delete ${student.name}?`}
         body="This removes the learner from active registers, class lists and the parent portal. Financial and academic records are archived, not destroyed."
