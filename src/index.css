@@ -1,5 +1,5 @@
 /* @import url() FONT IMPORTS MUST ALWAYS BE AT THE VERY TOP OF THIS FILE, ABOVE THE TAILWIND IMPORTS — DO NOT DELETE THIS COMMENT */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,800;0,9..144,900;1,9..144,400;1,9..144,500;1,9..144,600&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap');
 
 /* CRITICAL: THE FOLLOWING TAILWIND IMPORTS MUST NEVER BE DELETED OR REORDERED — DO NOT DELETE THIS COMMENT */
 @import 'tailwindcss/base';
@@ -9,29 +9,53 @@
 /* END TAILWIND IMPORTS — ALL OTHER CSS MUST GO BELOW THIS LINE */
 
 :root {
-  --heading-color: #000000;
-  --heading-color-secondary: #1A1A2E;
-  --body-color: #111827;
-  --body-muted-color: #374151;
-  --body-soft-color: #4B5563;
-  --sidebar-bg: #0F1629;
+  --heading-color: #152847;
+  --heading-color-secondary: #1F3A5F;
+  --body-color: #1A2233;
+  --body-muted-color: #4B5568;
+  --body-soft-color: #6B7280;
+  --sidebar-bg: #152847;
   --sidebar-hover: rgba(255, 255, 255, 0.1);
-  --sidebar-active: rgba(212, 168, 67, 0.15);
+  --sidebar-active: rgba(244, 194, 67, 0.15);
   --sidebar-text: rgba(255, 255, 255, 0.7);
-  --sidebar-text-active: #D4A843;
+  --sidebar-text-active: #F4C243;
+  --background: #F5F7FA;
+  --navy: #1F3A5F;
+  --navy-deep: #152847;
+  --navy-soft: #315281;
+  --yellow: #F4C243;
+  --yellow-soft: #FBD574;
+  --yellow-glow: #FFE9B3;
+  --gradient-hero: linear-gradient(135deg, #152847 0%, #1F3A5F 60%, #315281 100%);
+  --gradient-yellow: linear-gradient(135deg, #F4C243 0%, #FBD574 100%);
+  --gradient-soft: linear-gradient(180deg, #F5F7FA 0%, #FFFFFF 100%);
+  --gradient-glow: radial-gradient(circle at 30% 30%, rgba(244, 194, 67, 0.22), transparent 60%);
+  --shadow-soft: 0 10px 30px -12px rgba(21, 40, 71, 0.18);
+  --shadow-elevated: 0 25px 60px -20px rgba(21, 40, 71, 0.35);
+  --shadow-yellow: 0 15px 40px -12px rgba(244, 194, 67, 0.55);
+  --shadow-glass: 0 8px 32px rgba(21, 40, 71, 0.12);
+  --glass-bg: rgba(255, 255, 255, 0.65);
+  --glass-border: rgba(255, 255, 255, 0.4);
 }
 
 .dark {
-  --heading-color: #D4A843;
-  --heading-color-secondary: #E3C86E;
+  --heading-color: #F4C243;
+  --heading-color-secondary: #FBD574;
   --body-color: #F3F4F6;
   --body-muted-color: #D1D5DB;
   --body-soft-color: #9CA3AF;
-  --sidebar-bg: #0A0F1C;
+  --sidebar-bg: #0F1F33;
   --sidebar-hover: rgba(255, 255, 255, 0.08);
-  --sidebar-active: rgba(212, 168, 67, 0.15);
+  --sidebar-active: rgba(244, 194, 67, 0.15);
   --sidebar-text: rgba(255, 255, 255, 0.6);
-  --sidebar-text-active: #D4A843;
+  --sidebar-text-active: #F4C243;
+  --background: #0F1F33;
+  --glass-bg: rgba(21, 40, 71, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --gradient-glow: radial-gradient(circle at 30% 30%, rgba(244, 194, 67, 0.15), transparent 60%);
+  --shadow-soft: 0 10px 30px -12px rgba(0, 0, 0, 0.4);
+  --shadow-elevated: 0 25px 60px -20px rgba(0, 0, 0, 0.6);
+  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
 html,
@@ -41,15 +65,16 @@ body,
 }
 
 body {
-  background-color: #ffffff;
+  background-color: #F5F7FA;
   color: var(--body-color);
   -webkit-font-smoothing: antialiased;
+  font-family: 'Plus Jakarta Sans', Inter, ui-sans-serif, system-ui, sans-serif;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .dark body,
 .dark {
-  background-color: #0A0F1C;
+  background-color: #0F1F33;
   color: var(--body-color);
 }
 
@@ -65,6 +90,12 @@ p, span, li, dd, dt, label, figcaption {
   color: var(--body-muted-color);
 }
 
+.dark .text-ink-muted,
+.dark .text-gray-500,
+.dark .text-gray-400 {
+  color: var(--body-muted-color);
+}
+
 /* Soft text */
 .text-ink-soft,
 .text-gray-600 {
@@ -76,11 +107,13 @@ p, span, li, dd, dt, label, figcaption {
   color: var(--heading-color);
 }
 
-/* Responsive heading styles */
+/* Responsive heading styles - Fraunces display serif */
 h1, h2, h3, h4, h5, h6,
-.font-heading {
-  font-family: 'Montserrat', ui-sans-serif, system-ui, sans-serif;
+.font-heading,
+.font-display {
+  font-family: 'Fraunces', Georgia, ui-serif, serif;
   color: var(--heading-color);
+  font-optical-sizing: auto;
 }
 
 h1 {
@@ -109,74 +142,111 @@ h4 {
 
 /* Focus visible */
 :focus-visible {
-  outline: 3px solid #D4A843;
+  outline: 3px solid #F4C243;
   outline-offset: 2px;
 }
 
-/* Glassmorphism utilities */
+/* Glassmorphism utilities - Charis House style */
 .glass {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: var(--glass-bg);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-glass);
 }
 
 .glass-dark {
-  background: rgba(15, 22, 41, 0.6);
+  background: rgba(21, 40, 71, 0.6);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .glass-gold {
-  background: linear-gradient(135deg, rgba(212, 168, 67, 0.9) 0%, rgba(184, 146, 58, 0.9) 100%);
+  background: linear-gradient(135deg, rgba(244, 194, 67, 0.92) 0%, rgba(251, 213, 116, 0.92) 100%);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.25);
 }
 
 .glass-card {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  box-shadow: var(--shadow-soft);
 }
 
 .dark .glass-card {
-  background: rgba(15, 22, 41, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(21, 40, 71, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: var(--shadow-glass);
 }
 
-/* Gradient backgrounds */
+/* Gradient backgrounds - Charis House palette */
 .gradient-primary {
-  background: linear-gradient(135deg, #0F1629 0%, #1A2340 50%, #141B33 100%);
+  background: linear-gradient(135deg, #152847 0%, #1F3A5F 60%, #315281 100%);
 }
 
 .gradient-gold {
-  background: linear-gradient(135deg, #D4A843 0%, #E3C86E 50%, #D4A843 100%);
+  background: linear-gradient(135deg, #F4C243 0%, #FBD574 50%, #F4C243 100%);
   background-size: 200% 200%;
 }
 
 .gradient-hero {
-  background: linear-gradient(135deg, #0F1629 0%, #1A2340 25%, #141B33 50%, #0F1629 100%);
-  background-size: 400% 400%;
+  background: linear-gradient(135deg, #152847 0%, #1F3A5F 60%, #315281 100%);
+}
+
+.bg-gradient-hero {
+  background-image: var(--gradient-hero);
+}
+
+.bg-gradient-yellow {
+  background-image: var(--gradient-yellow);
+}
+
+.text-gradient-yellow {
+  background: var(--gradient-yellow);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .gradient-section-light {
-  background: linear-gradient(180deg, #F8F9FA 0%, #FFFFFF 100%);
+  background: linear-gradient(180deg, #F5F7FA 0%, #FFFFFF 100%);
 }
 
 .gradient-section-dark {
-  background: linear-gradient(180deg, #0A0F1C 0%, #0F1629 100%);
+  background: linear-gradient(180deg, #0F1F33 0%, #152847 100%);
 }
 
 .gradient-mesh {
-  background: 
-    radial-gradient(at 40% 20%, rgba(212, 168, 67, 0.15) 0px, transparent 50%),
-    radial-gradient(at 80% 0%, rgba(59, 130, 246, 0.1) 0px, transparent 50%),
-    radial-gradient(at 0% 50%, rgba(139, 92, 246, 0.1) 0px, transparent 50%),
-    radial-gradient(at 80% 50%, rgba(20, 184, 166, 0.1) 0px, transparent 50%),
-    radial-gradient(at 0% 100%, rgba(212, 168, 67, 0.1) 0px, transparent 50%);
+  background:
+    radial-gradient(at 40% 20%, rgba(244, 194, 67, 0.16) 0px, transparent 50%),
+    radial-gradient(at 80% 0%, rgba(59, 130, 246, 0.08) 0px, transparent 50%),
+    radial-gradient(at 0% 50%, rgba(49, 82, 129, 0.12) 0px, transparent 50%),
+    radial-gradient(at 80% 50%, rgba(244, 194, 67, 0.1) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, rgba(244, 194, 67, 0.12) 0px, transparent 50%);
+}
+
+/* Yellow pill badge - Charis House eyebrow style */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 9999px;
+  background: rgba(244, 194, 67, 0.18);
+  border: 1px solid rgba(244, 194, 67, 0.3);
+  padding: 0.3rem 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--heading-color);
+}
+
+.dark .pill {
+  color: #F4C243;
 }
 
 /* Button glow effects */
@@ -212,17 +282,27 @@ html {
 }
 
 .sala-scroll::-webkit-scrollbar-track {
-  background: rgba(15, 22, 41, 0.05);
+  background: rgba(21, 40, 71, 0.05);
   border-radius: 999px;
 }
 
 .sala-scroll::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #D4A843, #B8923A);
+  background: linear-gradient(180deg, #F4C243, #E0B030);
   border-radius: 999px;
 }
 
 .dark .sala-scroll::-webkit-scrollbar-track {
   background: rgba(255, 255, 255, 0.05);
+}
+
+/* Hide scrollbar utility (gallery filters) */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
 
 /* Animation delays for staggered effects */
@@ -234,7 +314,7 @@ html {
 
 /* Public grain texture */
 .public-grain {
-  background-image: radial-gradient(rgba(15, 22, 41, 0.06) 0.7px, transparent 0.7px);
+  background-image: radial-gradient(rgba(21, 40, 71, 0.05) 0.7px, transparent 0.7px);
   background-size: 13px 13px;
 }
 
@@ -253,19 +333,19 @@ html {
 
 .hover-lift:hover {
   transform: translateY(-4px);
-  box-shadow: 0 20px 40px -15px rgba(15, 22, 41, 0.3);
+  box-shadow: 0 20px 40px -15px rgba(21, 40, 71, 0.3);
 }
 
 /* Text gradient */
 .text-gradient {
-  background: linear-gradient(135deg, #D4A843 0%, #E3C86E 100%);
+  background: linear-gradient(135deg, #F4C243 0%, #FBD574 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .dark .text-gradient {
-  background: linear-gradient(135deg, #D4A843 0%, #E3C86E 100%);
+  background: linear-gradient(135deg, #F4C243 0%, #FBD574 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -274,8 +354,8 @@ html {
 /* Animated gradient border */
 .gradient-border {
   position: relative;
-  background: linear-gradient(135deg, #0F1629, #1A2340);
-  border-radius: 16px;
+  background: linear-gradient(135deg, #152847, #1F3A5F);
+  border-radius: 20px;
   padding: 1px;
 }
 
@@ -283,9 +363,9 @@ html {
   content: '';
   position: absolute;
   inset: 0;
-  border-radius: 16px;
+  border-radius: 20px;
   padding: 1px;
-  background: linear-gradient(135deg, #D4A843, #3B82F6, #8B5CF6, #D4A843);
+  background: linear-gradient(135deg, #F4C243, #FBD574, #315281, #F4C243);
   background-size: 300% 300%;
   animation: gradient 4s ease infinite;
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
@@ -296,6 +376,43 @@ html {
 @keyframes gradient {
   0%, 100% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
+}
+
+/* Ken Burns hero image */
+.kenburns {
+  animation: kenburns 20s ease-out forwards;
+  transform-origin: center center;
+}
+
+@keyframes kenburns {
+  0% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+/* Floating blob decorations */
+.blob {
+  animation: blob 22s ease-in-out infinite;
+  will-change: transform;
+}
+
+@keyframes blob {
+  0%, 100% { transform: translate(0) scale(1); }
+  33% { transform: translate(30px, -40px) scale(1.1); }
+  66% { transform: translate(-20px, 20px) scale(0.95); }
+}
+
+/* Marquee ticker */
+.animate-marquee {
+  animation: marquee 38s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
 
 /* Dashboard sidebar styles */
@@ -340,4 +457,247 @@ html {
   h3 {
     font-size: clamp(1.125rem, 1rem + 0.625vw, 1.375rem);
   }
+}
+
+
+/* ============================================
+   FONT COLOR RULES — light mode & dark mode
+   --------------------------------------------
+   LIGHT MODE
+     · Light surfaces: navy headings, dark body
+     · Navy surfaces:  white headings, soft-white body
+     · Glass cards on light: navy headings, dark body
+     · Glass cards on navy (light glass): dark text
+     · Gold surfaces:  navy text
+   DARK MODE
+     · Dark surfaces:  gold headings, light body
+     · Navy surfaces:  gold headings, soft-white body
+     · Glass cards:    gold headings, light body
+     · Gold surfaces:  navy text
+   ============================================ */
+
+/* --- Theme base --- */
+h1, h2, h3, h4, h5, h6,
+.font-heading,
+.font-display,
+.heading-color {
+  color: var(--heading-color);
+}
+
+.text-ink-muted,
+.text-gray-500,
+.text-gray-400 {
+  color: var(--body-muted-color);
+}
+
+.text-ink-soft,
+.text-gray-600 {
+  color: var(--body-soft-color);
+}
+
+/* --- Navy / blue surfaces --- */
+.section-on-navy,
+.bg-navy-deep,
+.bg-navy-900,
+.bg-navy-800,
+.bg-gradient-hero {
+  color: #FFFFFF;
+}
+
+.section-on-navy :is(h1, h2, h3, h4, h5, h6, .heading-color, .font-display, .font-heading),
+.bg-navy-deep :is(h1, h2, h3, h4, h5, h6, .heading-color, .font-display, .font-heading),
+.bg-navy-900 :is(h1, h2, h3, h4, h5, h6, .heading-color, .font-display, .font-heading),
+.bg-gradient-hero :is(h1, h2, h3, h4, h5, h6, .heading-color, .font-display, .font-heading) {
+  color: #FFFFFF;
+}
+
+.dark .section-on-navy :is(h1, h2, h3, h4, h5, h6, .heading-color, .font-display, .font-heading),
+.dark .bg-navy-deep :is(h1, h2, h3, h4, h5, h6, .heading-color, .font-display, .font-heading),
+.dark .bg-navy-900 :is(h1, h2, h3, h4, h5, h6, .heading-color, .font-display, .font-heading),
+.dark .bg-gradient-hero :is(h1, h2, h3, h4, h5, h6, .heading-color, .font-display, .font-heading) {
+  color: var(--heading-color); /* gold in dark mode */
+}
+
+/* Body on navy (direct, not inside glass-card) */
+.section-on-navy :is(p, li, dd, dt, label, figcaption),
+.bg-navy-deep :is(p, li, dd, dt, label, figcaption),
+.bg-navy-900 :is(p, li, dd, dt, label, figcaption),
+.bg-gradient-hero :is(p, li, dd, dt, label, figcaption) {
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.section-on-navy .text-white,
+.bg-navy-deep .text-white,
+.bg-navy-900 .text-white,
+.bg-gradient-hero .text-white {
+  color: #FFFFFF;
+}
+
+.dark .section-on-navy .text-white,
+.dark .bg-navy-deep .text-white,
+.dark .bg-navy-900 .text-white,
+.dark .bg-gradient-hero .text-white {
+  color: var(--heading-color);
+}
+
+.section-on-navy .text-white\/70,
+.section-on-navy .text-white\/65,
+.section-on-navy .text-white\/60,
+.bg-navy-deep .text-white\/70,
+.bg-navy-deep .text-white\/65,
+.bg-gradient-hero .text-white\/70 {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+/* Gold accents on navy */
+.section-on-navy .text-gold,
+.bg-navy-deep .text-gold,
+.bg-gradient-hero .text-gold {
+  color: #F4C243;
+}
+
+.section-on-navy .text-gradient,
+.section-on-navy .text-gradient-yellow,
+.bg-navy-deep .text-gradient,
+.bg-navy-deep .text-gradient-yellow,
+.bg-gradient-hero .text-gradient,
+.bg-gradient-hero .text-gradient-yellow {
+  -webkit-text-fill-color: #F4C243;
+  background: linear-gradient(135deg, #F4C243 0%, #FBD574 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.section-on-navy .pill,
+.bg-navy-deep .pill,
+.bg-gradient-hero .pill {
+  color: #F4C243;
+  background: rgba(244, 194, 67, 0.16);
+  border-color: rgba(244, 194, 67, 0.35);
+}
+
+/* ============================================
+   GLASS CARDS — own their text colours
+   Light mode: white glass → navy headings, dark body
+   Dark mode:  navy glass → gold headings, light body
+   These rules come AFTER navy-section rules so they win
+   on equal specificity when a card sits inside a navy section.
+   ============================================ */
+
+.glass-card,
+.dark .glass-card {
+  color: var(--body-color);
+}
+
+.glass-card :is(h1, h2, h3, h4, h5, h6, .heading-color, .font-display, .font-heading),
+.dark .glass-card :is(h1, h2, h3, h4, h5, h6, .heading-color, .font-display, .font-heading) {
+  color: var(--heading-color);
+}
+
+.glass-card :is(p, li, dd, dt, label, figcaption, .text-ink-muted, .text-gray-400, .text-gray-500),
+.dark .glass-card :is(p, li, dd, dt, label, figcaption, .text-ink-muted, .text-gray-400, .text-gray-500) {
+  color: var(--body-muted-color);
+}
+
+/* Big numbers / gradients on glass: navy (readable) in light, gold in dark */
+.glass-card .text-gradient,
+.glass-card .text-gradient-yellow {
+  color: #152847;
+  -webkit-text-fill-color: #152847;
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+}
+
+.dark .glass-card .text-gradient,
+.dark .glass-card .text-gradient-yellow {
+  background: linear-gradient(135deg, #F4C243 0%, #FBD574 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: var(--heading-color);
+}
+
+/* Small gold accents on glass: darker gold in light (contrast), bright gold in dark */
+.glass-card .text-gold {
+  color: #B8923A;
+}
+
+.dark .glass-card .text-gold {
+  color: #F4C243;
+}
+
+/* Explicit white text on glass cards is wrong in light mode (white on white).
+   Prefer theme colours unless the card is intentionally dark. */
+.glass-card .text-white {
+  color: var(--heading-color);
+}
+
+.dark .glass-card .text-white {
+  color: #FFFFFF;
+}
+
+/* Explicit muted on glass */
+.glass-card .text-ink-muted,
+.glass-card .text-gray-400,
+.glass-card .text-gray-500 {
+  color: var(--body-muted-color);
+}
+
+/* ============================================
+   BUTTONS on glass / light cards — always visible
+   ============================================ */
+
+.glass-card .btn-secondary,
+.glass-card button.bg-white,
+.glass-card a .bg-white {
+  border-color: rgba(21, 40, 71, 0.22);
+}
+
+/* Secondary buttons: strong light-mode contrast */
+.glass-card :is(.bg-white, [class*="variant-secondary"]),
+section :is(.glass-card) :is(button, .btn) {
+  /* placeholder — concrete rules below */
+}
+
+/* Concrete secondary button visibility on light glass */
+.glass-card button,
+.glass-card .btn {
+  /* ensure label is dark in light mode when button is light */
+}
+
+.glass-card :is(button, a) :is(.text-navy, [class*="text-navy"]) {
+  color: #152847;
+}
+
+/* ============================================
+   GOLD / yellow surfaces — navy text both modes
+   ============================================ */
+.bg-gradient-yellow :is(h1, h2, h3, h4, h5, h6, p, li, .heading-color, .text-navy-deep, .text-ink),
+.glass-gold :is(h1, h2, h3, h4, p, .heading-color, .text-navy-deep) {
+  color: #152847;
+}
+
+/* Dark glass cards (used on navy when we force dark) */
+.glass-card.bg-navy-deep,
+.bg-navy-deep.glass-card {
+  color: #FFFFFF;
+}
+
+.bg-navy-deep.glass-card :is(h1, h2, h3, h4, .heading-color),
+.glass-card.bg-navy-deep :is(h1, h2, h3, h4, .heading-color) {
+  color: #FFFFFF;
+}
+
+.dark .bg-navy-deep.glass-card :is(h1, h2, h3, h4, .heading-color) {
+  color: var(--heading-color);
+}
+
+.bg-navy-deep.glass-card :is(p, li, .text-ink-muted) {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+/* Transparent header helpers */
+.site-header-scrim {
+  background: linear-gradient(180deg, rgba(21, 40, 71, 0.75) 0%, rgba(21, 40, 71, 0.35) 55%, rgba(21, 40, 71, 0) 100%);
 }

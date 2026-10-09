@@ -18,7 +18,7 @@ const BTN_BASE =
 
 const BTN_VARIANT: Record<string, string> = {
   primary: 'bg-gold text-navy hover:bg-gold-dark shadow-sm font-semibold',
-  secondary: 'bg-white dark:bg-white/10 text-navy dark:text-white border border-surface-border dark:border-white/20 hover:border-gold hover:bg-gold-50 dark:hover:bg-white/15',
+  secondary: 'bg-white text-navy-deep border border-navy-deep/25 hover:border-gold hover:bg-gold-50 hover:text-navy-deep dark:bg-white/10 dark:text-white dark:border-white/25 dark:hover:bg-white/15 font-semibold',
   ghost: 'text-ink-muted dark:text-gray-400 hover:text-navy dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10',
   danger: 'bg-red-600 text-white hover:bg-red-700',
   gold: 'bg-gold text-navy hover:bg-gold-dark font-semibold'
@@ -222,12 +222,24 @@ export function PageHeader({ title, subtitle, actions }: {title: string;subtitle
 
 }
 
-export function SectionTitle({ eyebrow, title, intro, center }: {eyebrow?: string;title: string;intro?: string;center?: boolean;}) {
+export function SectionTitle({ eyebrow, title, intro, center, tone = 'light' }: {eyebrow?: string;title: string;intro?: string;center?: boolean;tone?: 'light' | 'dark';}) {
   return (
-    <div className={cx('max-w-2xl', center && 'mx-auto text-center')}>
-      {eyebrow && <p className="text-[13px] font-semibold text-gold mb-2 uppercase tracking-wider">{eyebrow}</p>}
-      <h2 className="font-heading text-heading-lg heading-color leading-[1.15]">{title}</h2>
-      {intro && <p className="mt-3 text-[15px] leading-relaxed text-ink-muted dark:text-gray-400">{intro}</p>}
+    <div className={cx('max-w-2xl', center && 'mx-auto text-center', tone === 'dark' && 'section-on-navy')}>
+      {eyebrow && (
+        <span className={cx('pill mb-4', tone === 'dark' && 'bg-white/10 border-white/25')}>
+          <span className="h-1.5 w-1.5 rounded-full bg-gold" />
+          {eyebrow}
+        </span>
+      )}
+      <h2 className={cx(
+        'font-display text-heading-lg heading-color leading-[1.12] tracking-[-0.02em]',
+        tone === 'dark' && 'text-white dark:text-gold'
+      )}>{title}</h2>
+      {intro && (
+        <p className={cx(
+          'mt-3 text-[15px] leading-relaxed',
+          tone === 'dark' ? 'text-white/75 dark:text-white/70' : 'text-ink-muted dark:text-gray-400'
+        )}>{intro}</p>
+      )}
     </div>);
-
 }

@@ -1,67 +1,148 @@
 import { motion } from 'framer-motion';
-import { useApp } from '../../contexts/AppContext';
+import { Link } from 'react-router-dom';
+import { ArrowRightIcon } from 'lucide-react';
+import { Button } from '../../components/ui/primitives';
+import { FloatingSchoolDecor } from '../../components/public/FloatingSchoolDecor';
 
-export function PageHero({ eyebrow, title, intro, image }: {eyebrow: string;title: string;intro: string;image?: string;}) {
-  const { darkMode } = useApp();
-  
+export function PageHero({
+  eyebrow,
+  title,
+  intro,
+  image,
+  primaryCta,
+  primaryTo,
+  secondaryCta,
+  secondaryTo,
+  compact = false
+}: {
+  eyebrow: string;
+  title: string;
+  intro: string;
+  image?: string;
+  primaryCta?: string;
+  primaryTo?: string;
+  secondaryCta?: string;
+  secondaryTo?: string;
+  compact?: boolean;
+}) {
   return (
-    <section className="relative overflow-hidden min-h-[400px] flex items-center">
-      <div className="absolute inset-0 bg-gradient-to-br from-navy-900 via-navy-800 to-navy-900" />
+    <section
+      className={
+        compact
+          ? 'relative overflow-hidden min-h-[320px] flex items-center bg-gradient-hero'
+          : 'relative overflow-hidden min-h-[420px] lg:min-h-[480px] flex items-center bg-gradient-hero'
+      }
+    >
+      {image && (
+        <div className="absolute inset-0">
+          <img
+            src={image}
+            alt=""
+            className="w-full h-full object-cover kenburns opacity-45"
+          />
+        </div>
+      )}
+      <div className="absolute inset-0 bg-gradient-to-t from-navy-deep via-navy-deep/70 to-navy-deep/40" />
+      <div className="absolute inset-0 bg-gradient-to-r from-navy-deep/60 via-transparent to-navy-deep/40" />
+      <FloatingSchoolDecor variant="navy" density={compact ? 'low' : 'medium'} seed={42} />
       <div className="absolute inset-0 gradient-mesh opacity-40" />
-      
-      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 py-14 lg:py-20 grid lg:grid-cols-[1.1fr_0.9fr] gap-10 items-center">
-        <div>
-          <motion.span 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
+      <div className="absolute -top-24 -right-24 h-80 w-80 rounded-full bg-gold/15 blur-3xl blob pointer-events-none" />
+      <div className="absolute -bottom-20 -left-20 h-72 w-72 rounded-full bg-gold/10 blur-3xl blob pointer-events-none" style={{ animationDelay: '-8s' }} />
+
+      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 py-14 lg:py-20 w-full">
+        <div className={compact ? 'max-w-3xl' : 'max-w-3xl'}>
+          <motion.span
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 text-[13px] font-semibold text-gold mb-4 uppercase tracking-wider"
+            className="inline-flex items-center gap-2 rounded-full bg-white/12 backdrop-blur border border-white/20 px-4 py-1.5 text-[11px] font-semibold text-white/85 uppercase tracking-[0.18em]"
           >
-            <span className="w-8 h-[2px] bg-gold" />
+            <span className="h-1.5 w-1.5 rounded-full bg-gold animate-pulse" />
             {eyebrow}
           </motion.span>
-          
-          <motion.h1 
-            initial={{ opacity: 0, y: 20 }}
+
+          <motion.h1
+            initial={{ opacity: 0, y: 22 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="font-heading text-[38px] sm:text-[56px] lg:text-[64px] font-black leading-[1.05] text-white"
+            transition={{ duration: 0.65, delay: 0.08, ease: [0.23, 1, 0.32, 1] }}
+            className="mt-5 font-display font-bold text-white leading-[1.08] tracking-[-0.02em] text-[2rem] sm:text-5xl lg:text-[3.4rem]"
           >
             {title}
           </motion.h1>
-          
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }}
+
+          <motion.p
+            initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="mt-4 max-w-xl text-[15.5px] leading-relaxed text-gray-300"
+            transition={{ duration: 0.6, delay: 0.18 }}
+            className="mt-4 max-w-2xl text-[15px] sm:text-[17px] leading-relaxed text-white/70"
           >
             {intro}
           </motion.p>
-        </div>
-        
-        {image && (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="relative"
-          >
-            <img 
-              src={image} 
-              alt="" 
-              className="w-full aspect-[16/10] object-cover rounded-2xl shadow-card" 
-            />
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
+
+          {(primaryCta || secondaryCta) && (
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.5 }}
-              className="absolute -bottom-4 -left-4 glass-gold rounded-xl px-4 py-3 text-[12px] font-bold uppercase tracking-[0.12em] text-navy shadow-glow"
+              transition={{ duration: 0.55, delay: 0.28 }}
+              className="mt-8 flex flex-wrap gap-3"
             >
-              Your Next Chapter Starts Here
+              {primaryCta && primaryTo && (
+                primaryTo.startsWith('http') ? (
+                  <a href={primaryTo} target="_blank" rel="noreferrer">
+                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                      <Button
+                        size="lg"
+                        className="rounded-full bg-gold px-7 text-navy-deep font-semibold hover:bg-gold-soft shadow-yellow"
+                      >
+                        {primaryCta}
+                        <ArrowRightIcon size={16} />
+                      </Button>
+                    </motion.div>
+                  </a>
+                ) : (
+                  <Link to={primaryTo}>
+                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                      <Button
+                        size="lg"
+                        className="rounded-full bg-gold px-7 text-navy-deep font-semibold hover:bg-gold-soft shadow-yellow"
+                      >
+                        {primaryCta}
+                        <ArrowRightIcon size={16} />
+                      </Button>
+                    </motion.div>
+                  </Link>
+                )
+              )}
+              {secondaryCta && secondaryTo && (
+                secondaryTo.startsWith('http') ? (
+                  <a href={secondaryTo} target="_blank" rel="noreferrer">
+                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                      <Button
+                        size="lg"
+                        variant="secondary"
+                        className="rounded-full bg-white/10 border-white/25 text-white hover:bg-white/20 backdrop-blur"
+                      >
+                        {secondaryCta}
+                      </Button>
+                    </motion.div>
+                  </a>
+                ) : (
+                  <Link to={secondaryTo}>
+                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                      <Button
+                        size="lg"
+                        variant="secondary"
+                        className="rounded-full bg-white/10 border-white/25 text-white hover:bg-white/20 backdrop-blur"
+                      >
+                        {secondaryCta}
+                      </Button>
+                    </motion.div>
+                  </Link>
+                )
+              )}
             </motion.div>
-          </motion.div>
-        )}
+          )}
+        </div>
       </div>
     </section>
   );

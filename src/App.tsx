@@ -7,6 +7,9 @@ import { RequireAuth } from './components/portal/RequireAuth';
 
 import { Home } from './pages/public/Home';
 import { About } from './pages/public/About';
+import { Programmes } from './pages/public/Programmes';
+import { Campus } from './pages/public/Campus';
+import { Gallery } from './pages/public/Gallery';
 import { Academics } from './pages/public/Academics';
 import { Admissions } from './pages/public/Admissions';
 import { Apply } from './pages/public/Apply';
@@ -101,6 +104,10 @@ export function App({ initialRole = 'visitor' }: {initialRole?: DemoRole;}) {
           <Route element={<PublicLayout />}>
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />
+            <Route path="/programmes" element={<Programmes />} />
+            <Route path="/programs" element={<Programmes />} />
+            <Route path="/campus" element={<Campus />} />
+            <Route path="/gallery" element={<Gallery />} />
             <Route path="/academics" element={<Academics />} />
             <Route path="/admissions" element={<Admissions />} />
             <Route path="/apply" element={<Apply />} />

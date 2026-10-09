@@ -46,7 +46,7 @@ export function SchoolLife() {
                   <div className="absolute inset-0 bg-gradient-to-t from-navy-900/60 to-transparent" />
                 </div>
                 <figcaption className="mt-4">
-                  <h2 className="text-[16px] font-heading font-bold heading-color">{s.title}</h2>
+                  <h2 className="text-[16px] font-heading font-bold text-ink dark:text-white">{s.title}</h2>
                   <p className="mt-2 text-[14px] leading-relaxed text-ink-muted dark:text-gray-400">{s.body}</p>
                 </figcaption>
               </motion.figure>
@@ -55,13 +55,13 @@ export function SchoolLife() {
         </div>
       </section>
 
-      <section className="relative py-14 lg:py-20 overflow-hidden">
+      <section className="relative py-14 lg:py-20 overflow-hidden section-on-navy">
         <div className="absolute inset-0 bg-gradient-to-br from-navy-900 via-navy-800 to-navy-900" />
         <div className="absolute inset-0 gradient-mesh opacity-40" />
         
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-            <SectionTitle eyebrow="Gallery" title="Moments From This Term" />
+            <SectionTitle eyebrow="Gallery" title="Moments From This Term" tone="dark" />
             <div className="flex flex-wrap gap-1.5">
               {CATEGORIES.map((c) => (
                 <button
