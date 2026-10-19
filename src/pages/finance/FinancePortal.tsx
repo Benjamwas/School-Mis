@@ -364,9 +364,16 @@ export function FinancePortal() {
             key: 'a',
             header: '',
             align: 'right',
-            render: () =>
+            render: (r: any) =>
             <span className="flex justify-end gap-1.5">
-                    <Button variant="ghost" size="sm" icon={<PrinterIcon size={14} />} onClick={() => window.print()}>
+                    <Button variant="ghost" size="sm" icon={<PrinterIcon size={14} />} onClick={async () => {
+                      if (!live) { window.print(); return; }
+                      try {
+                        const res = await api.post<{ pdf_url: string }>(`finance/receipts/${r.id}/download/`);
+                        if (res.pdf_url) window.open(res.pdf_url, '_blank');
+                        else window.print();
+                      } catch { window.print(); }
+                    }}>
                       Print
                     </Button>
                   </span>

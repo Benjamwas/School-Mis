@@ -48,6 +48,7 @@ export function ParentFees() {
 
   const close = () => {
     setOpen(false);
+    setReceipt(null);
     window.setTimeout(() => setStage('method'), 250);
   };
 
@@ -272,24 +273,6 @@ export function ParentFees() {
         {stage === 'done' && receipt && <ReceiptBody amount={Number(amount)} method={method} reference={receipt.ref} receiptNo={receipt.no} />}
       </Modal>
 
-      {/* Standalone receipt viewer */}
-      <Modal
-        open={!open && !!receipt}
-        onClose={() => setReceipt(null)}
-        title="Payment receipt"
-        footer={
-        <>
-            <Button variant="secondary" size="sm" icon={<DownloadIcon size={15} />}>
-              Download
-            </Button>
-            <Button size="sm" icon={<PrinterIcon size={15} />} onClick={() => window.print()}>
-              Print
-            </Button>
-          </>
-        }>
-        
-        {receipt && <ReceiptBody amount={40000} method="M-Pesa" reference={receipt.ref} receiptNo={receipt.no} />}
-      </Modal>
     </div>);
 
 }
@@ -298,9 +281,11 @@ function ReceiptBody({ amount, method, reference, receiptNo }: {amount: number;m
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}>
       <div className="rounded-lg border border-line overflow-hidden">
-        <div className="bg-forest-800 text-white px-5 py-4">
+        <div className="bg-navy-deep text-white px-5 py-4 relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-yellow" />
           <p className="font-serif text-[17px]">St. Ann Lifred Academy Schools</p>
-          <p className="text-[12.5px] text-forest-100/80">Kiambu Road, Runda Gardens, Nairobi · finance@salaschools.ac.ke</p>
+          <p className="text-[12px] text-gold mt-0.5">Learn. Grow. Lead.</p>
+          <p className="text-[12px] text-white/60 mt-0.5">Kiambu Road, Runda Gardens, Nairobi · finance@salaschools.ac.ke</p>
         </div>
         <dl className="divide-y divide-line">
           {[
@@ -320,8 +305,12 @@ function ReceiptBody({ amount, method, reference, receiptNo }: {amount: number;m
             </div>
           )}
         </dl>
-        <div className="px-5 py-3 bg-cream/60 text-[12px] text-ink-muted">
-          This is a computer-generated receipt and does not require a signature. Prototype data — not a real transaction.
+        <div className="bg-navy-deep text-white px-5 py-3 flex justify-between items-center">
+          <span className="text-[11px] font-bold uppercase tracking-wider">Total paid</span>
+          <span className="font-bold text-gold text-[16px]">{formatKES(amount)}</span>
+        </div>
+        <div className="px-5 py-3 bg-cream/60 text-[12px] text-ink-muted border-t border-line">
+          This is a computer-generated receipt and does not require a signature.
         </div>
       </div>
     </motion.div>);
