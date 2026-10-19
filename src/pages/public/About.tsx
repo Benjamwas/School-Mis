@@ -1,12 +1,14 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { BookOpenIcon, HeartIcon, SparklesIcon } from 'lucide-react';
-import { Button, SectionTitle } from '../../components/ui/primitives';
+import { Button } from '../../components/ui/primitives';
 import { Icon } from '../../components/ui/icons';
 import { Timeline } from '../../components/ui/data';
 import { CAMPUS_STATS, IMAGES, LEADERSHIP, PROGRAMS, TIMELINE, VALUES, SCHOOL } from '../../data/school';
 import { PageHero } from './PageHero';
 import { FloatingSchoolDecor } from '../../components/public/FloatingSchoolDecor';
+
+const LEADERSHIP_IMAGES = [IMAGES.library, IMAGES.classroom, IMAGES.arts, IMAGES.sports, IMAGES.hero, IMAGES.library];
 
 const fade = {
   initial: { opacity: 0, y: 22 },
@@ -133,13 +135,12 @@ export function About() {
 
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6">
           <motion.div {...fade} className="text-center">
-            <span className="pill mb-4 inline-flex">
-              <span className="h-1.5 w-1.5 rounded-full bg-gold" />
+            <h2 className="font-unkempt text-[32px] sm:text-[42px] font-bold text-gold leading-[1.1]">
               Core Values
-            </span>
-            <h2 className="font-display text-[32px] sm:text-[42px] font-bold text-white leading-[1.1] tracking-[-0.02em]">
-              Five Things We Will Not Compromise On
             </h2>
+            <p className="mt-2 text-[15px] text-white/60">
+              Five things we will not compromise on
+            </p>
           </motion.div>
 
           <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-5">
@@ -172,13 +173,12 @@ export function About() {
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 grid lg:grid-cols-2 gap-14">
           <div>
             <motion.div {...fade}>
-              <span className="pill mb-4 inline-flex">
-                <span className="h-1.5 w-1.5 rounded-full bg-gold" />
+              <h2 className="font-unkempt text-[32px] sm:text-[42px] font-bold heading-color leading-[1.1]">
                 Our History
-              </span>
-              <h2 className="font-display text-[32px] sm:text-[42px] font-bold heading-color leading-[1.1] tracking-[-0.02em]">
-                Milestones
               </h2>
+              <p className="mt-1 text-[15px] text-ink-muted dark:text-gray-400">
+                Milestones that shaped SALA
+              </p>
             </motion.div>
             <div className="mt-8">
               <Timeline
@@ -189,13 +189,12 @@ export function About() {
 
           <div>
             <motion.div {...fade}>
-              <span className="pill mb-4 inline-flex">
-                <span className="h-1.5 w-1.5 rounded-full bg-gold" />
+              <h2 className="font-unkempt text-[32px] sm:text-[42px] font-bold heading-color leading-[1.1]">
                 Leadership
-              </span>
-              <h2 className="font-display text-[32px] sm:text-[42px] font-bold heading-color leading-[1.1] tracking-[-0.02em]">
-                The People Accountable For Your Child&apos;s School
               </h2>
+              <p className="mt-1 text-[15px] text-ink-muted dark:text-gray-400">
+                The people accountable for your child&apos;s school
+              </p>
             </motion.div>
             <ul className="mt-8 space-y-4">
               {LEADERSHIP.map((l, i) => (
@@ -206,15 +205,22 @@ export function About() {
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.08 }}
                   whileHover={{ x: 4 }}
-                  className="glass-card rounded-2xl p-4 hover-lift flex gap-4"
+                  className="glass-card rounded-2xl overflow-hidden hover-lift group"
                 >
-                  <span className="h-12 w-12 shrink-0 rounded-2xl bg-gradient-yellow grid place-items-center font-heading font-bold text-navy-deep">
-                    {l.name.split(' ').map((n) => n[0]).slice(0, 2).join('')}
-                  </span>
-                  <div>
-                    <p className="font-heading text-[15px] font-bold text-ink dark:text-white">{l.name}</p>
-                    <p className="text-[12.5px] text-gold font-semibold">{l.role}</p>
-                    <p className="mt-1 text-[13px] leading-relaxed text-ink-muted dark:text-gray-400">{l.note}</p>
+                  <div className="relative h-36 sm:h-40 overflow-hidden">
+                    <img
+                      src={LEADERSHIP_IMAGES[i % LEADERSHIP_IMAGES.length]}
+                      alt={l.name}
+                      className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-navy-deep/80 via-navy-deep/20 to-transparent" />
+                    <div className="absolute bottom-3 left-3 right-3">
+                      <p className="font-heading text-[15px] font-bold text-white leading-tight">{l.name}</p>
+                      <p className="text-[12px] text-gold font-semibold">{l.role}</p>
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <p className="text-[13px] leading-relaxed text-ink-muted dark:text-gray-400">{l.note}</p>
                   </div>
                 </motion.li>
               ))}
@@ -249,13 +255,14 @@ export function About() {
       <section className="relative py-16 lg:py-20 overflow-hidden">
         <div className="absolute inset-0 gradient-section-light dark:gradient-section-dark" />
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6">
-          <SectionTitle
-            eyebrow="What we teach"
-            title="Programmes from Playgroup to Grade 9"
-            intro="Six carefully designed stages — each one building on the last, so no child is rushed and none is left behind."
-            center
-            tone="light"
-          />
+          <div className="text-center max-w-2xl mx-auto">
+            <h2 className="font-unkempt text-[32px] sm:text-[42px] font-bold heading-color leading-[1.1]">
+              What We Teach
+            </h2>
+            <p className="mt-2 text-[15px] text-ink-muted dark:text-gray-400">
+              Programmes from Playgroup to Grade 9 — six stages, each building on the last
+            </p>
+          </div>
           <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {PROGRAMS.map((p, i) => (
               <motion.div

@@ -55,9 +55,8 @@ export function PageHero({
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 rounded-full bg-white/12 backdrop-blur border border-white/20 px-4 py-1.5 text-[11px] font-semibold text-white/85 uppercase tracking-[0.18em]"
+            className="block font-unkempt text-[22px] sm:text-[28px] font-bold text-gold leading-none"
           >
-            <span className="h-1.5 w-1.5 rounded-full bg-gold animate-pulse" />
             {eyebrow}
           </motion.span>
 
@@ -65,7 +64,7 @@ export function PageHero({
             initial={{ opacity: 0, y: 22 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.65, delay: 0.08, ease: [0.23, 1, 0.32, 1] }}
-            className="mt-5 font-display font-bold text-white leading-[1.08] tracking-[-0.02em] text-[2rem] sm:text-5xl lg:text-[3.4rem]"
+            className="mt-3 font-display font-bold text-white leading-[1.08] tracking-[-0.02em] text-[2rem] sm:text-5xl lg:text-[3.4rem]"
           >
             {title}
           </motion.h1>
