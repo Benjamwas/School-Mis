@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   ArrowRightIcon,
   ArrowUpRightIcon,
@@ -41,6 +42,41 @@ const stagger = {
   viewport: { once: true, margin: '-50px' }
 };
 
+/** Hero photo carousel — cycles school images with Ken Burns zoom */
+const HERO_SLIDES = [
+  { src: IMAGES.hero, alt: 'St. Ann Lifred campus' },
+  { src: IMAGES.classroom, alt: 'Classroom learning' },
+  { src: IMAGES.sports, alt: 'Sports and athletics' },
+  { src: IMAGES.library, alt: 'Baobab Library' },
+  { src: IMAGES.arts, alt: 'Creative arts' }
+];
+const SLIDE_MS = 5000;
+
+function HeroCarousel() {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const t = setInterval(() => setIndex((i) => (i + 1) % HERO_SLIDES.length), SLIDE_MS);
+    return () => clearInterval(t);
+  }, []);
+
+  return (
+    <AnimatePresence mode="sync">
+      <motion.div
+        key={index}
+        initial={{ opacity: 0, scale: 1.08 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ opacity: { duration: 1.2, ease: 'easeInOut' }, scale: { duration: SLIDE_MS / 1000 + 1, ease: 'linear' } }}
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(${HERO_SLIDES[index].src})` }}
+        role="img"
+        aria-label={HERO_SLIDES[index].alt}
+      />
+    </AnimatePresence>
+  );
+}
+
 function Marquee() {
   const items = [...MARQUEE_ITEMS, ...MARQUEE_ITEMS];
   return (
@@ -61,17 +97,11 @@ function Marquee() {
 }
 
 export function Home() {
-  const { scrollYProgress } = useScroll();
-  const scale = useTransform(scrollYProgress, [0, 1], [1, 1.12]);
-
   return (
     <div className="w-full">
       {/* Hero */}
       <section className="relative min-h-[680px] lg:min-h-[780px] flex items-end overflow-hidden bg-navy-deep section-on-navy">
-        <motion.div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat kenburns"
-          style={{ backgroundImage: `url(${IMAGES.hero})`, scale }}
-        />
+        <HeroCarousel />
         <div className="absolute inset-0 bg-gradient-to-t from-navy-deep via-navy-deep/55 to-navy-deep/25" />
         <div className="absolute inset-0 bg-gradient-to-r from-navy-deep/55 via-transparent to-transparent" />
         <div className="absolute inset-0 gradient-mesh opacity-35" />
@@ -88,28 +118,21 @@ export function Home() {
             transition={{ duration: 0.7, ease: [0.23, 1, 0.32, 1] }}
             className="max-w-3xl"
           >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.94 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.15, duration: 0.5 }}
-              className="inline-flex items-center gap-2 glass rounded-full px-4 py-1.5 mb-6"
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1, duration: 0.6 }}
+              className="font-playpen font-bold text-white leading-[1.1] tracking-[-0.01em] text-[2rem] sm:text-[2.8rem] lg:text-[3.4rem]"
             >
-              <SparklesIcon size={14} className="text-gold" />
-              <span className="text-[11px] font-semibold text-white/85 uppercase tracking-[0.16em]">
-                Playgroup · PP1 · PP2 · Grade 1 – 9
-              </span>
-            </motion.div>
-
-            <h1 className="font-display font-bold text-white leading-[1.06] tracking-[-0.02em] text-[2.1rem] sm:text-5xl lg:text-[3.6rem]">
               Shaping Confident Learners{' '}
               <span className="text-gradient-yellow">For A Global Future</span>
-            </h1>
+            </motion.h1>
 
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.35, duration: 0.5 }}
-              className="mt-5 text-[16px] sm:text-[19px] text-white/70 font-medium max-w-2xl leading-relaxed"
+              className="mt-5 font-playpen text-[16px] sm:text-[18px] text-white/75 max-w-2xl leading-relaxed"
             >
               St. Ann Lifred Academy Schools — a warm, rigorous Nairobi school where every child
               learns, grows and leads. From first steps in Playgroup to Junior Secondary.
