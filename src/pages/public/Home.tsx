@@ -11,7 +11,7 @@ import {
   SparklesIcon,
   StarIcon
 } from 'lucide-react';
-import { Button, Card } from '../../components/ui/primitives';
+import { Button, Card, cx } from '../../components/ui/primitives';
 import { Icon } from '../../components/ui/icons';
 import {
   DAY_SCHEDULE,
@@ -74,6 +74,70 @@ function HeroCarousel() {
         aria-label={HERO_SLIDES[index].alt}
       />
     </AnimatePresence>
+  );
+}
+
+/** Auto-advancing school image carousel — pauses on hover */
+function WhyCarousel() {
+  const [index, setIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
+
+  useEffect(() => {
+    if (paused) return;
+    const t = setInterval(() => setIndex((i) => (i + 1) % HERO_SLIDES.length), 4000);
+    return () => clearInterval(t);
+  }, [paused]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -24 }}
+      whileInView={{ opacity: 1, x: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
+      className="relative"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+    >
+      <div className="relative overflow-hidden rounded-3xl shadow-elevated aspect-[4/5] sm:aspect-[4/4] lg:aspect-[3/4]">
+        <AnimatePresence mode="sync">
+          <motion.img
+            key={index}
+            src={HERO_SLIDES[index].src}
+            alt={HERO_SLIDES[index].alt}
+            initial={{ opacity: 0, scale: 1.1 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ opacity: { duration: 0.9, ease: 'easeInOut' }, scale: { duration: 5, ease: 'linear' } }}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        </AnimatePresence>
+        <div className="absolute inset-0 bg-gradient-to-t from-navy-deep/70 via-transparent to-transparent pointer-events-none" />
+
+        {/* Dots indicator */}
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+          {HERO_SLIDES.map((_, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => setIndex(i)}
+              aria-label={`Slide ${i + 1}`}
+              className={cx(
+                'h-1.5 rounded-full transition-all duration-300',
+                i === index ? 'w-6 bg-gold' : 'w-1.5 bg-white/40 hover:bg-white/70'
+              )}
+            />
+          ))}
+        </div>
+
+        {/* Pause indicator */}
+        <div className={cx(
+          'absolute top-4 right-4 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider transition-opacity duration-300 z-10',
+          paused ? 'bg-gold text-navy-deep opacity-100' : 'bg-white/15 text-white/60 opacity-0'
+        )}>
+          {paused ? 'Paused' : ''}
+        </div>
+      </div>
+    </motion.div>
   );
 }
 
@@ -318,43 +382,46 @@ export function Home() {
       {/* Why SALA */}
       <section className="relative py-16 lg:py-24 overflow-hidden bg-navy-deep section-on-navy">
         <div className="absolute inset-0 gradient-mesh opacity-40" />
-        <FloatingSchoolDecor variant="navy" density="high" seed={ 1 } />
+        <FloatingSchoolDecor variant="navy" density="medium" seed={ 1 } />
         <div className="absolute top-1/4 -left-32 h-80 w-80 rounded-full bg-gold/10 blur-3xl blob pointer-events-none" />
 
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6">
-          <motion.div {...fade} className="text-center">
-            <span className="pill mb-4 inline-flex">
-              <span className="h-1.5 w-1.5 rounded-full bg-gold" />
-              Why Choose Us
-            </span>
-            <h2 className="font-display text-heading-xl text-white leading-[1.1] tracking-[-0.02em]">
-              An Education Built Around <span className="text-gradient-yellow">The Child</span>
-            </h2>
-            <p className="mt-4 text-[15.5px] leading-relaxed text-white/60 max-w-2xl mx-auto">
-              Nine years of CBC delivery, refined into a school day that is calm, structured and unmistakably warm.
-            </p>
-          </motion.div>
+          <div className="grid lg:grid-cols-[0.9fr_1.1fr] gap-10 lg:gap-14 items-center">
+            {/* Left: auto-advancing image carousel, pauses on hover */}
+            <WhyCarousel />
 
-          <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {WHY_SALA.map((w, i) => (
-              <motion.div
-                key={w.title}
-                {...stagger}
-                transition={{ delay: i * 0.08 }}
-                whileHover={{ y: -6, scale: 1.01 }}
-                className="glass-card rounded-3xl p-6 hover-lift group"
-              >
-                <div className="flex items-start gap-4">
-                  <span className="h-14 w-14 shrink-0 rounded-2xl bg-gradient-yellow grid place-items-center shadow-yellow group-hover:scale-105 transition-transform duration-300">
-                    <Icon name={w.icon} size={22} className="text-navy-deep" />
-                  </span>
-                  <div>
-                    <h3 className="font-heading text-[16px] font-bold text-white">{w.title}</h3>
-                    <p className="mt-2 text-[13.5px] leading-relaxed text-white/65">{w.body}</p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+            {/* Right: heading + tiles */}
+            <div>
+              <motion.h2 {...fade} className="font-display text-heading-xl text-white leading-[1.1] tracking-[-0.02em]">
+                An Education Built Around{' '}
+                <span className="text-gradient-yellow">The Child</span>
+              </motion.h2>
+              <motion.p {...fade} transition={{ delay: 0.08 }} className="mt-4 text-[15px] leading-relaxed text-white/60">
+                Nine years of CBC delivery, refined into a school day that is calm, structured and unmistakably warm.
+              </motion.p>
+
+              <div className="mt-8 grid gap-4 sm:grid-cols-2">
+                {WHY_SALA.map((w, i) => (
+                  <motion.div
+                    key={w.title}
+                    {...stagger}
+                    transition={{ delay: i * 0.06 }}
+                    whileHover={{ y: -5, scale: 1.01 }}
+                    className="glass-card rounded-3xl p-5 hover-lift group"
+                  >
+                    <div className="flex items-start gap-3.5">
+                      <span className="h-12 w-12 shrink-0 rounded-2xl bg-gradient-yellow grid place-items-center shadow-yellow group-hover:scale-105 transition-transform duration-300">
+                        <Icon name={w.icon} size={20} className="text-navy-deep" />
+                      </span>
+                      <div>
+                        <h3 className="font-heading text-[15px] font-bold text-white">{w.title}</h3>
+                        <p className="mt-1.5 text-[13px] leading-relaxed text-white/65">{w.body}</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </section>
