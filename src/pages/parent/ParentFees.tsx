@@ -273,6 +273,24 @@ export function ParentFees() {
         {stage === 'done' && receipt && <ReceiptBody amount={Number(amount)} method={method} reference={receipt.ref} receiptNo={receipt.no} />}
       </Modal>
 
+      {/* Standalone receipt viewer — opens when clicking Receipt in payment history */}
+      <Modal
+        open={!open && !!receipt}
+        onClose={() => setReceipt(null)}
+        title="Payment receipt"
+        footer={
+          <>
+            <Button variant="secondary" size="sm" icon={<DownloadIcon size={15} />} onClick={() => window.print()}>
+              Download
+            </Button>
+            <Button size="sm" icon={<PrinterIcon size={15} />} onClick={() => window.print()}>
+              Print
+            </Button>
+          </>
+        }
+      >
+        {receipt && <ReceiptBody amount={40000} method="M-Pesa" reference={receipt.ref} receiptNo={receipt.no} />}
+      </Modal>
     </div>);
 
 }
