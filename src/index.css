@@ -916,3 +916,20 @@ section :is(.glass-card) :is(button, .btn) {
   font-family: 'Unkempt', 'Fraunces', Georgia, cursive;
   letter-spacing: 0;
 }
+
+/* Dark mode: readable select options (browser default is often light) */
+.dark select option,
+.dark select optgroup {
+  background-color: #152847;
+  color: #FFFFFF;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+/* Public form controls: readable in both modes */
+input, select, textarea {
+  color-scheme: light dark;
+}

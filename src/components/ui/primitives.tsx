@@ -176,11 +176,11 @@ export function Avatar({ initials, size = 'md', tone = 'forest' }: {initials: st
 export function Field({ label, hint, required, children, className }: {label: string;hint?: string;required?: boolean;children: React.ReactNode;className?: string;}) {
   return (
     <label className={cx('block', className)}>
-      <span className="block text-[13px] font-medium text-ink mb-1.5">
+      <span className="block text-[13px] font-medium text-ink dark:text-white mb-1.5">
         {label} {required && <span className="text-red-600">*</span>}
       </span>
       {children}
-      {hint && <span className="mt-1 block text-[12px] text-ink-muted">{hint}</span>}
+      {hint && <span className="mt-1 block text-[12px] text-ink-muted dark:text-gray-400">{hint}</span>}
     </label>);
 
 }
@@ -192,7 +192,7 @@ export function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
 }
 
 export function Select(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
-  return <select {...props} className={cx(CONTROL, 'pr-8', props.className)} />;
+  return <select {...props} className={cx(CONTROL, 'pr-8', props.className)} style={{ colorScheme: 'light dark' }} />;
 }
 
 export function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
