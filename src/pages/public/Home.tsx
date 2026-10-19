@@ -8,7 +8,6 @@ import {
   ClockIcon,
   MessageCircleIcon,
   QuoteIcon,
-  SparklesIcon,
   StarIcon
 } from 'lucide-react';
 import { Button, Card, cx } from '../../components/ui/primitives';
@@ -434,13 +433,12 @@ export function Home() {
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <motion.div {...fade}>
-              <span className="pill mb-4 inline-flex">
-                <span className="h-1.5 w-1.5 rounded-full bg-gold" />
+              <h2 className="font-unkempt text-[32px] sm:text-[42px] font-bold heading-color leading-[1.1]">
                 Academic Programmes
-              </span>
-              <h2 className="font-display text-[32px] sm:text-[42px] font-bold heading-color leading-[1.1] tracking-[-0.02em]">
-                From Playgroup to Junior Secondary
               </h2>
+              <p className="mt-2 text-[15px] text-ink-muted dark:text-gray-400">
+                From Playgroup to Junior Secondary
+              </p>
             </motion.div>
             <Link to="/programmes" className="text-[14px] font-semibold text-gold hover:text-gold-dark inline-flex items-center gap-2 group">
               View all programmes
@@ -546,13 +544,12 @@ export function Home() {
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6">
           <div className="grid lg:grid-cols-[0.85fr_1.15fr] gap-10 lg:gap-14 items-start">
             <motion.div {...fade}>
-              <span className="pill mb-4 inline-flex">
-                <span className="h-1.5 w-1.5 rounded-full bg-gold" />
+              <h2 className="font-unkempt text-[32px] sm:text-[40px] font-bold heading-color leading-[1.1]">
                 School Life
-              </span>
-              <h2 className="font-display text-[32px] sm:text-[40px] font-bold heading-color leading-[1.1] tracking-[-0.02em]">
-                The Hours That Shape A Childhood
               </h2>
+              <p className="mt-2 text-[15px] text-ink-muted dark:text-gray-400">
+                The hours that shape a childhood
+              </p>
               <p className="mt-4 text-[15px] leading-relaxed text-ink-muted dark:text-gray-400">
                 Thirty-one clubs, four houses, two terms of inter-school sport and a calendar that
                 gives every child something to be known for.
@@ -636,13 +633,12 @@ export function Home() {
             <div>
               <div className="flex items-end justify-between gap-4">
                 <motion.div {...fade}>
-                  <span className="pill mb-4 inline-flex">
-                    <CalendarDaysIcon size={12} className="text-gold" />
+                  <h2 className="font-unkempt text-[32px] sm:text-[40px] font-bold heading-color leading-[1.1]">
                     Latest News
-                  </span>
-                  <h2 className="font-display text-[32px] sm:text-[40px] font-bold heading-color leading-[1.1] tracking-[-0.02em]">
-                    News &amp; Announcements
                   </h2>
+                  <p className="mt-1 text-[14px] text-ink-muted dark:text-gray-400">
+                    News &amp; announcements from the school
+                  </p>
                 </motion.div>
                 <Link to="/news" className="text-[14px] font-semibold text-gold hover:text-gold-dark whitespace-nowrap inline-flex items-center gap-1">
                   View All <ArrowUpRightIcon size={14} />

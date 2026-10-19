@@ -66,6 +66,7 @@ export default {
         heading: ['Fraunces', 'Georgia', 'ui-serif', 'serif'],
         display: ['Fraunces', 'Georgia', 'ui-serif', 'serif'],
         playpen: ['"Playpen Sans"', 'Fraunces', 'Georgia', 'cursive'],
+        unkempt: ['Unkempt', 'Fraunces', 'Georgia', 'cursive'],
       },
       fontSize: {
         'heading-xs': ['clamp(1rem, 0.9rem + 0.5vw, 1.125rem)', { lineHeight: '1.3', fontWeight: '700' }],
