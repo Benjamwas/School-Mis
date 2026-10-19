@@ -302,13 +302,12 @@ export function Admissions() {
 
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6">
           <motion.div {...fade} className="text-center max-w-2xl mx-auto">
-            <span className="pill mb-4 inline-flex">
-              <span className="h-1.5 w-1.5 rounded-full bg-gold" />
-              How it works
-            </span>
-            <h2 className="font-display text-[32px] sm:text-[42px] font-bold heading-color leading-[1.1] tracking-[-0.02em]">
-              Four Steps From First Call To First Day
+            <h2 className="font-unkempt text-[32px] sm:text-[42px] font-bold heading-color leading-[1.1]">
+              How It Works
             </h2>
+            <p className="mt-1 text-[15px] text-ink-muted dark:text-gray-400">
+              Four steps from first call to first day
+            </p>
             <p className="mt-4 text-[15px] text-ink-muted dark:text-gray-400">
               No complicated process. Book a visit, apply, get assessed, and enrol — we stay with you
               the whole way.
@@ -342,13 +341,12 @@ export function Admissions() {
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 grid lg:grid-cols-[1.2fr_0.8fr] gap-12">
           <div>
             <motion.div {...fade}>
-              <span className="pill mb-4 inline-flex">
-                <span className="h-1.5 w-1.5 rounded-full bg-gold" />
-                Available places
-              </span>
-              <h2 className="font-display text-[30px] sm:text-[38px] font-bold text-white leading-[1.1] tracking-[-0.02em]">
-                Where We Currently Have Space
+              <h2 className="font-unkempt text-[30px] sm:text-[38px] font-bold text-gold leading-[1.1]">
+                Available Places
               </h2>
+              <p className="mt-1 text-[15px] text-white/60">
+                Where we currently have space
+              </p>
             </motion.div>
 
             <div className="mt-6 grid sm:grid-cols-2 gap-4">
