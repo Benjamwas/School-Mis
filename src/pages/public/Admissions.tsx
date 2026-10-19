@@ -79,12 +79,12 @@ function BookVisitForm() {
 
   return (
     <Card className="p-0 overflow-hidden glass-card">
-      <div className="bg-gradient-hero px-6 py-5">
-        <h3 className="font-display text-[22px] font-bold text-white flex items-center gap-2">
-          <CalendarDaysIcon size={20} className="text-gold" />
+      <div className="bg-gradient-hero dark:bg-gradient-yellow px-6 py-5">
+        <h3 className="font-display text-[22px] font-bold text-white dark:text-black flex items-center gap-2">
+          <CalendarDaysIcon size={20} className="text-gold dark:text-navy-deep" />
           Book a School Visit
         </h3>
-        <p className="mt-1 text-[13px] text-white/70">
+        <p className="mt-1 text-[13px] text-white/70 dark:text-black/80">
           Tours run on school days so you see a normal morning — not a staged one.
         </p>
       </div>
