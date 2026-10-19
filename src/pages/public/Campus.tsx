@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { CheckIcon, MapPinIcon, MessageCircleIcon, ShieldCheckIcon, SparklesIcon } from 'lucide-react';
-import { Button, Card, SectionTitle } from '../../components/ui/primitives';
+import { CheckIcon, MapPinIcon, MessageCircleIcon } from 'lucide-react';
+import { Button, Card } from '../../components/ui/primitives';
 import { Icon } from '../../components/ui/icons';
 import {
   CAMPUS_FACILITIES,
@@ -65,12 +65,14 @@ export function Campus() {
         <div className="absolute -top-40 -right-40 h-[600px] w-[600px] rounded-full bg-gold/5 blur-3xl pointer-events-none" />
 
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6">
-          <SectionTitle
-            eyebrow="Facilities"
-            title="Spaces That Inspire Learning"
-            intro="Bright, well-ventilated and fully equipped — every corner of the campus is designed for curiosity, safety and joy."
-            tone="light"
-          />
+          <div className="max-w-2xl">
+            <h2 className="font-unkempt text-[32px] sm:text-[42px] font-bold heading-color leading-[1.1]">
+              Facilities
+            </h2>
+            <p className="mt-2 text-[15px] text-ink-muted dark:text-gray-400">
+              Spaces that inspire learning — bright, well-ventilated and fully equipped for curiosity, safety and joy.
+            </p>
+          </div>
 
           <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {CAMPUS_FACILITIES.map((f, i) => (
@@ -115,13 +117,12 @@ export function Campus() {
         <FloatingSchoolDecor variant="navy" density="medium" seed={ 7 } />
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 grid lg:grid-cols-[0.9fr_1.1fr] gap-12">
           <motion.div {...fade}>
-            <span className="pill mb-4 inline-flex">
-              <SparklesIcon size={12} className="text-gold" />
-              A day on campus
-            </span>
-            <h2 className="font-display text-[32px] sm:text-[40px] font-bold text-white leading-[1.1] tracking-[-0.02em]">
-              From gates open to the last pickup
+            <h2 className="font-unkempt text-[32px] sm:text-[40px] font-bold text-gold leading-[1.1]">
+              A Day On Campus
             </h2>
+            <p className="mt-1 text-[15px] text-white/60">
+              From gates open to the last pickup
+            </p>
             <p className="mt-4 text-[15px] leading-relaxed text-white/65">
               A predictable rhythm children can trust — with time for serious learning, real play and
               everything in between.
@@ -160,13 +161,12 @@ export function Campus() {
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 grid lg:grid-cols-2 gap-12 items-center">
           <div>
             <motion.div {...fade}>
-              <span className="pill mb-4 inline-flex">
-                <ShieldCheckIcon size={12} className="text-gold" />
-                Safety &amp; care
-              </span>
-              <h2 className="font-display text-[30px] sm:text-[40px] font-bold heading-color leading-[1.1] tracking-[-0.02em]">
-                A campus parents can trust
+              <h2 className="font-unkempt text-[30px] sm:text-[40px] font-bold heading-color leading-[1.1]">
+                Safety &amp; Care
               </h2>
+              <p className="mt-1 text-[15px] text-ink-muted dark:text-gray-400">
+                A campus parents can trust
+              </p>
               <p className="mt-4 text-[15px] leading-relaxed text-ink-muted dark:text-gray-400">
                 Security, health and wellbeing are not add-ons at SALA — they are how the school day
                 is built. You always know where your child is.
@@ -206,7 +206,7 @@ export function Campus() {
               </p>
               <div className="mt-5 flex flex-wrap gap-3">
                 <Link to="/admissions">
-                  <Button className="rounded-full bg-navy-deep text-white hover:bg-navy-soft">
+                  <Button className="rounded-full bg-[#25D366] text-white font-semibold hover:bg-[#1ebe5b] shadow-[0_0_20px_rgba(37,211,102,0.4)]">
                     Book a Tour
                   </Button>
                 </Link>
