@@ -77,6 +77,27 @@ function HeroCarousel() {
   );
 }
 
+/** Animated number counter — counts up to target when mounted */
+function Counter({ target, duration = 1600, className }: { target: number; duration?: number; className?: string }) {
+  const [value, setValue] = useState(0);
+
+  useEffect(() => {
+    let raf: number;
+    const start = performance.now();
+    const step = (now: number) => {
+      const progress = Math.min((now - start) / duration, 1);
+      // ease-out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setValue(Math.round(eased * target));
+      if (progress < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [target, duration]);
+
+  return <span className={className}>{value}</span>;
+}
+
 function Marquee() {
   const items = [...MARQUEE_ITEMS, ...MARQUEE_ITEMS];
   return (
@@ -219,10 +240,6 @@ export function Home() {
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             <motion.div {...fade}>
-              <span className="pill mb-4">
-                <SparklesIcon size={12} className="text-gold" />
-                Discover Our School
-              </span>
               <h2 className="font-display text-heading-xl heading-color leading-[1.1] tracking-[-0.02em]">
                 A Legacy of{' '}
                 <span className="text-gradient">Educational Excellence</span>
@@ -288,8 +305,8 @@ export function Home() {
                     Individualised learning, critical thinking and 21st-century skills — delivered with warmth.
                   </p>
                 </div>
-                <div className="absolute -top-4 -right-4 glass-gold rounded-2xl px-4 py-3 text-navy-deep shadow-yellow">
-                  <p className="font-display font-extrabold text-2xl leading-none">24</p>
+                <div className="absolute -top-4 -right-4 glass-gold rounded-2xl px-4 py-3 text-navy-deep shadow-yellow cursor-default transition-all duration-300 hover:shadow-[0_0_28px_rgba(56,189,248,0.65),0_0_8px_rgba(56,189,248,0.4)] hover:scale-105">
+                  <Counter target={24} className="font-display font-extrabold text-2xl leading-none" />
                   <p className="text-[10px] font-bold uppercase tracking-wider mt-0.5">Years of excellence</p>
                 </div>
               </div>
