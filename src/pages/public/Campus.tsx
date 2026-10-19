@@ -234,13 +234,12 @@ export function Campus() {
         <div className="absolute -top-16 right-[15%] h-64 w-64 rounded-full bg-gold/15 blur-3xl blob pointer-events-none" />
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 text-center">
           <motion.div {...fade}>
-            <span className="pill mb-4 inline-flex bg-white/10 border-white/20 text-white">
-              <span className="h-1.5 w-1.5 rounded-full bg-gold" />
-              Come and see
-            </span>
-            <h2 className="font-display text-[32px] sm:text-[44px] font-bold text-white leading-[1.1] tracking-[-0.02em]">
-              A tour tells you more than any photograph
+            <h2 className="font-unkempt text-[32px] sm:text-[44px] font-bold text-gold leading-[1.1]">
+              Come And See
             </h2>
+            <p className="mt-2 text-[16px] text-white/70">
+              A tour tells you more than any photograph
+            </p>
             <p className="mt-4 text-[15.5px] leading-relaxed text-white/70 max-w-2xl mx-auto">
               Visit on a school day and watch an ordinary morning at SALA. Meet the section head, walk
               the corridors and ask everything.
