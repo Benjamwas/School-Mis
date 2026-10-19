@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRightIcon, CheckIcon, MusicIcon, SparklesIcon } from 'lucide-react';
-import { Button, Card, SectionTitle } from '../../components/ui/primitives';
+import { Button, Card } from '../../components/ui/primitives';
 import { Icon } from '../../components/ui/icons';
 import { DAY_SCHEDULE, IMAGES, PROGRAMS, SCHOOL, WHATSAPP_URL } from '../../data/school';
 import { PageHero } from './PageHero';
@@ -229,13 +229,14 @@ export function Programmes() {
         <div className="absolute inset-0 gradient-mesh opacity-30" />
         <FloatingSchoolDecor variant="navy" density="high" seed={ 6 } />
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6">
-          <SectionTitle
-            eyebrow="The full journey"
-            title="Six stages. One continuous path."
-            intro="Each stage is designed to hand the next one a child who is ready — curious, confident and kind."
-            center
-            tone="dark"
-          />
+          <div className="text-center max-w-2xl mx-auto">
+            <h2 className="font-unkempt text-[32px] sm:text-[42px] font-bold text-gold leading-[1.1]">
+              The Full Journey
+            </h2>
+            <p className="mt-2 text-[15px] text-white/60">
+              Six stages. One continuous path — each stage hands the next a child who is ready.
+            </p>
+          </div>
           <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {PROGRAMS.map((p, i) => (
               <motion.div
@@ -269,13 +270,12 @@ export function Programmes() {
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 grid lg:grid-cols-2 gap-12 items-center">
           <div>
             <motion.div {...fade}>
-              <span className="pill mb-4 inline-flex">
-                <span className="h-1.5 w-1.5 rounded-full bg-gold" />
-                The school day
-              </span>
-              <h2 className="font-display text-[30px] sm:text-[38px] font-bold heading-color leading-[1.1] tracking-[-0.02em]">
-                Structure that sets children free
+              <h2 className="font-unkempt text-[30px] sm:text-[38px] font-bold heading-color leading-[1.1]">
+                The School Day
               </h2>
+              <p className="mt-1 text-[15px] text-ink-muted dark:text-gray-400">
+                Structure that sets children free
+              </p>
               <p className="mt-4 text-[15px] leading-relaxed text-ink-muted dark:text-gray-400">
                 A predictable rhythm — assembly, core learning, play, lunch, clubs — so children know
                 what comes next and feel safe enough to explore.
