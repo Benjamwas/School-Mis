@@ -87,7 +87,14 @@ export function ParentDashboard() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Stat label="Term average" value={`${average}%`} sub="Up 2 points from Term 2" icon={<TrendingUpIcon size={16} />} tone="primary" />
+        <Link to={`/parent/child/${child.id}/Results`} className="block group">
+          <div className="relative">
+            <Stat label="Term average" value={`${average}%`} sub="Up 2 points from Term 2" icon={<TrendingUpIcon size={16} />} tone="primary" />
+            <span className="absolute top-3 right-3 text-[11px] font-semibold text-forest-700 opacity-0 group-hover:opacity-100 transition-opacity duration-200 inline-flex items-center gap-1">
+              Show more <ArrowRightIcon size={12} />
+            </span>
+          </div>
+        </Link>
         <Stat label="Attendance" value={`${ATTENDANCE_SUMMARY.percentage}%`} sub={`${ATTENDANCE_SUMMARY.absent} absences · ${ATTENDANCE_SUMMARY.late} late`} icon={<CalendarCheckIcon size={16} />} />
         <Stat label="Open assignments" value={upcoming.length} sub="1 overdue — Social Studies" icon={<ClipboardListIcon size={16} />} tone="gold" />
         <Stat label="Fee balance" value={formatKES(FEE_SUMMARY.balance)} sub={`Due ${FEE_SUMMARY.deadline}`} icon={<WalletIcon size={16} />} tone="danger" />
